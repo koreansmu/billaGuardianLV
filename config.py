@@ -1,21 +1,21 @@
-API_ID = 
+API_ID = 24845544
 
-API_HASH = ""
+API_HASH = "57f32b90d5406552ab9156f6404fe5a8"
 
 # Telegram bot token
-TELEGRAM_TOKEN = ""
+TELEGRAM_TOKEN = "7901543499:AAGi4t3Z7SA16jtTEsytcDbiTCWgtu3ygf8"
 
 # Your telegram user ID (owner)
-OWNER_ID = 6346273488
+OWNER_ID = 5960968099
 
-SUDO_ID = [5907205317, 1805959544, 1284920298, 5881613383, 6864672519, 5458968679]
+SUDO_ID = 5960968099, 6257927828
 
 MONGO_URI = "mongodb+srv://aditya20278:#raam7879636352@editguardian.vablt.mongodb.net/?retryWrites=true&w=majority&appName=editguardian"
 
-DB_NAME = "interstellarXd"
+DB_NAME = "aditya20278"
 
 LOGGER = True
 
-BOT_NAME = "Edit Guardian"
+BOT_NAME = "Storm Edit Guardian"
 
-SUPPORT_ID = ()
+SUPPORT_ID = -1002064111110
