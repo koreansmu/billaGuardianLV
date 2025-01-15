@@ -1,7 +1,7 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 PM_START_TEXT = """
-*𝙃𝙀𝙇𝙇𝙊* {}[💥]({})🖖 I'ᴍ ʏᴏᴜʀ 𝗦ᴛᴏʀᴍ Eᴅɪᴛ Gᴜᴀʀᴅɪᴀɴ Bᴏᴛ, ʜᴇʀᴇ ᴛᴏ ᴍᴀɪɴᴛᴀɪɴ ᴀ sᴇᴄᴜʀᴇ ᴇɴᴠɪʀᴏɴᴍᴇɴᴛ ғᴏʀ ᴏᴜʀ ɢʀᴏᴜᴘ ᴅɪsᴄᴜssɪᴏɴs.
+*Hᴇʟʟᴏ* {}[💎]({})🖖 I'ᴍ ʏᴏᴜʀ Bɪʟʟᴀ Eᴅɪᴛ Gᴜᴀʀᴅɪᴀɴ Bᴏᴛ, ʜᴇʀᴇ ᴛᴏ ᴍᴀɪɴᴛᴀɪɴ ᴀ sᴇᴄᴜʀᴇ ᴇɴᴠɪʀᴏɴᴍᴇɴᴛ ғᴏʀ ᴏᴜʀ ɢʀᴏᴜᴘ ᴅɪsᴄᴜssɪᴏɴs.
 
 🚫 ᴇᴅɪᴛᴇᴅ ᴍᴇꜱꜱᴀɢᴇ ᴅᴇʟᴇᴛɪᴏɴ : ɪ"ʟʟ ʀᴇᴍᴏᴠᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇꜱꜱᴀɢᴇꜱ ᴛᴏ ᴍᴀɪɴᴛᴀɪɴ ɢʀᴏᴜᴘ ɪɴᴛᴇɢʀɪᴛʏ 
 
@@ -18,12 +18,12 @@ buttons = [
     [
         InlineKeyboardButton(
             text="𝗔ᴅᴅ 𝗠ᴇ 𝗧ᴏ 𝗬ᴏᴜʀ 𝗚ʀᴏᴜᴘ",
-            url=f"https://t.me/EditGuardian2bot?startgroup=true",
+            url=f"https://t.me/BillaGuardianBot?startgroup=true",
         ),
     ],
     [
-        InlineKeyboardButton(text="𝗦ᴜᴘᴘᴏʀᴛ", url=f"https://t.me/storm_core"),
-        InlineKeyboardButton(text="Sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/storm_techh"),
+        InlineKeyboardButton(text="𝗦ᴜᴘᴘᴏʀᴛ", url=f"https://t.me/BillaCore"),
+        InlineKeyboardButton(text="Sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/BillaSpace"),
     ],    
     [
         InlineKeyboardButton(text="𝗢ᴡɴᴇʀ", url=f"https://t.me/interstellarXd"),
@@ -43,4 +43,4 @@ IMG = [
 "https://telegra.ph/file/fbfa4262e467652e75d83.jpg",
 "https://telegra.ph/file/865ce3676d535ec83dce9.jpg",
 ]
-PM_START_IMG = "https://graph.org/file/d7d394215184301d3d144-c15cd7e6a28a077f8a.jpg"
+PM_START_IMG = "https://graph.org/file/4406f73158f063d9b4c8a-149f2c85562e350896.jpg"
