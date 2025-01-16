@@ -16,7 +16,7 @@ from pymongo import MongoClient
 from config import LOGGER, MONGO_URI, DB_NAME, TELEGRAM_TOKEN, OWNER_ID, SUDO_ID, BOT_NAME, SUPPORT_ID, API_ID, API_HASH
 
 app = Client("AutoDelete", bot_token=TELEGRAM_TOKEN, api_id=API_ID, api_hash=API_HASH)
-print("INFO: Starting Autodelete")
+print("INFO: ʙɪʟʟᴀ ɢᴜᴀʀᴅɪᴀɴ ɪs ᴏɴ ᴡᴀʏ")
 app.start()
 bot = app
 # Initialize your Pyrogram Client your bot's ID
@@ -188,7 +188,7 @@ def add_sudo(update: Update, context: CallbackContext):
         sudo_user_obj = context.bot.get_chat_member(chat_id=chat_id, user_id=sudo_user)
         sudo_user_id = sudo_user_obj.user.id
     except Exception as e:
-        update.message.reply_text(f"𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗿𝗲𝘀𝗼𝗹𝘃𝗲 𝘂𝘀𝗲𝗿: {e}")
+        update.message.reply_text(f"ғᴀɪʟᴇᴅ ᴛᴏ ʀᴇsᴏʟᴠᴇ ᴜsᴇʀ: {e}")
         return
     
     # Add sudo user ID to the list if not already present
