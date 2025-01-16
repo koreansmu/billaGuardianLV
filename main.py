@@ -118,7 +118,7 @@ def start(update: Update, context: CallbackContext):
         update.effective_message.reply_photo(
             PM_START_IMG,
             reply_markup=InlineKeyboardMarkup(buttons),
-            caption="ɪ ᴀᴍ ᴀʟɪᴠᴇ ʙᴀʙʏ!\n<b>ᴜᴘᴛɪᴍᴇ :</b> <code>{}</code>".format(
+            caption="ʙɪʟʟᴀ ᴇᴅɪᴛ ɢᴜᴀʀᴅɪᴀɴ ɪs ᴀʟɪᴠᴇ ʙᴀʙʏ!\n<b>ᴜᴘᴛɪᴍᴇ :</b> <code>{}</code>".format(
                 uptime
             ),
             parse_mode=ParseMode.HTML,
@@ -164,7 +164,7 @@ def check_edit(update: Update, context: CallbackContext):
             bot.delete_message(chat_id=chat_id, message_id=message_id)
             
             # Send a message notifying about the deletion
-            bot.send_message(chat_id=chat_id, text=f"{user_mention} 𝗷𝘂𝘀𝘁 𝗲𝗱𝗶𝘁 𝗮 𝗺𝗲𝘀𝘀𝗮𝗴𝗲. 𝗜 𝗱𝗲𝗹𝗲𝘁𝗲 𝗵𝗶𝘀 𝗲𝗱𝗶𝘁𝗲𝗱 𝗺𝗲𝘀𝘀𝗮𝗴𝗲.", parse_mode='HTML')
+            bot.send_message(chat_id=chat_id, text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ʜɪs ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ.", parse_mode='HTML')
 
 
 def add_sudo(update: Update, context: CallbackContext):
@@ -173,12 +173,12 @@ def add_sudo(update: Update, context: CallbackContext):
     
     # Check if the user is the owner
     if user.id != OWNER_ID:
-        update.message.reply_text("𝗬𝗼𝘂 𝗱𝗼 𝗻𝗼𝘁 𝗵𝗮𝘃𝗲 𝗽𝗲𝗿𝗺𝗶𝘀𝘀𝗶𝗼𝗻 𝘁𝗼 𝘂𝘀𝗲 𝘁𝗵𝗶𝘀 𝗰𝗼𝗺𝗺𝗮𝗻𝗱.")
+        update.message.reply_text("ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
     
     # Check if a username or user ID is provided
     if len(context.args) != 1:
-        update.message.reply_text("𝗨𝘀𝗮𝗴𝗲: /addsudo <username or user ID>")
+        update.message.reply_text("ᴜsᴀɢᴇ: /addsudo <username or user ID>")
         return
     
     sudo_user = context.args[0]
@@ -194,19 +194,19 @@ def add_sudo(update: Update, context: CallbackContext):
     # Add sudo user ID to the list if not already present
     if sudo_user_id not in sudo_users:
         sudo_users.append(sudo_user_id)
-        update.message.reply_text(f"𝗔𝗱𝗱𝗲𝗱 {sudo_user_obj.user.username} 𝗮𝘀 𝗮 𝘀𝘂𝗱𝗼 𝘂𝘀𝗲𝗿.")
+        update.message.reply_text(f"ᴀᴅᴅᴇᴅ {sudo_user_obj.user.username} ᴀs ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
     else:
-        update.message.reply_text(f"{sudo_user_obj.user.username} 𝗶𝘀 𝗮𝗹𝗿𝗲𝗮𝗱𝘆 𝗮 𝘀𝘂𝗱𝗼 𝘂𝘀𝗲𝗿.")
+        update.message.reply_text(f"{sudo_user_obj.user.username} ɪs ᴀʟʀᴇᴀᴅʏ ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
 
 
 def sudo_list(update: Update, context: CallbackContext):
     # Check if the user is the owner
     if update.effective_user.id != OWNER_ID:
-        update.message.reply_text("𝗬𝗼𝘂 𝗱𝗼 𝗻𝗼𝘁 𝗵𝗮𝘃𝗲 𝗽𝗲𝗿𝗺𝗶𝘀𝘀𝗶𝗼𝗻 𝘁𝗼 𝘂𝘀𝗲 𝘁𝗵𝗶𝘀 𝗰𝗼𝗺𝗺𝗮𝗻𝗱.")
+        update.message.reply_text("ʏᴏᴜ ᴅᴏɴ'ᴛ  ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
 
     # Prepare the response message with SUDO_ID users
-    text = "𝗟𝗶𝘀𝘁 𝗼𝗳 𝘀𝘂𝗱𝗼 𝘂𝘀𝗲𝗿𝘀:\n"
+    text = "ʟɪsᴛ ᴏғ sᴜᴅᴏ ᴜsᴇʀs:\n"
     count = 1
     smex = 0
 
@@ -269,7 +269,7 @@ def clone(update: Update, context: CallbackContext):
     
     # Check if the user is the owner
     if user.id != OWNER_ID:
-        update.message.reply_text("𝗬𝗼𝘂 𝗮𝗿𝗲 𝗻𝗼 𝗮𝘂𝘁𝗵𝗿𝗼𝗿𝗶𝘇𝗲𝗱 𝘁𝗼 𝘂𝘀𝗲 𝘁𝗵𝗶𝘀 𝗰𝗼𝗺𝗺𝗮𝗻𝗱.")
+        update.message.reply_text("ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴍᴅ.")
         return
 
     # Get the bot token from the command
@@ -300,7 +300,7 @@ def clone(update: Update, context: CallbackContext):
         clone_updater.start_polling()
 
         update.message.reply_text(
-            f"𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝗰𝗹𝗼𝗻𝗲𝗱 𝗯𝗼𝘁 {new_bot_info.username} ({new_bot_info.id})."
+            f"sᴜᴄᴄᴇssғᴜʟʟʏ ᴄʟᴏɴᴇᴅ ᴛʜᴇ ʙᴏᴛ {new_bot_info.username} ({new_bot_info.id})."
         )
 
     except Exception as e:
@@ -391,7 +391,7 @@ def main():
                 f"{SUPPORT_ID}",
                 photo=PM_START_IMG,               
                 caption=f"""
-𝗛𝗲𝗹𝗹𝗼 𝗜 𝗮𝗺 𝘀𝘁𝗮𝗿𝘁𝗲𝗱 𝘁𝗼 𝗺𝗮𝗻𝗮𝗴𝗲 𝗲𝗱𝗶𝘁𝗲𝗱 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀 ! 𝗜 𝗮𝗺 𝗖𝗿𝗲𝗮𝘁𝗲 𝗯𝘆 @hasnainkk""",
+ʜᴇʟʟᴏ ɪ ᴀᴍ sᴛᴀʀᴛᴇᴅ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ𝘀 ! ɪ"ᴍ ᴅᴇᴠʟᴏᴘᴇᴅ ʙʏ @ifeelraam""",
                 parse_mode=ParseMode.MARKDOWN,
             )
         except Unauthorized:
