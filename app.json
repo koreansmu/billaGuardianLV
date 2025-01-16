@@ -1,7 +1,7 @@
 {
   "name":  "Telegram edit message delete bot",
   "description": "Telegram bot example using python-telegram-bot",
-  "repository": "https://github.com/hasnainkk-07/Edit-Guardian",
+  "repository": "https://github.com/koreansmu/billaGuardianLV",
   "keywords": ["telegram", "bot", "python"],
   "env": {
     "TELEGRAM_TOKEN": {
