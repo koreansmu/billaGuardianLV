@@ -1,6 +1,7 @@
 import html
 import logging
 import re
+import os
 import asyncio
 import time
 from random import choice
@@ -142,6 +143,11 @@ def get_user_id(update: Update, context: CallbackContext):
         update.message.reply_text(f"Failed to get user ID: {e}")
         logger.error(f"get_user_id error: {e}")
 
+# Establish a MongoDB client connection using MONGO_URI
+mongo_client = MongoClient(MONGO_URI)  # Use MONGO_URI from config.py
+
+# Select the collection without specifying the database
+authorized_users_collection = mongo_client["your_database_name"]["authorized_users"]  # Replace with your collection name
 
 def check_edit(update: Update, context: CallbackContext):
     bot: Bot = context.bot
@@ -160,12 +166,14 @@ def check_edit(update: Update, context: CallbackContext):
         # Create the mention for the user
         user_mention = f"<a href='tg://user?id={user_id}'>{html.escape(edited_message.from_user.first_name)}</a>"
         
-        # Delete the message if the editor is not the owner
-        if user_id not in sudo_users:
+        # Check if the user is authorized or admin (check against sudo users and MongoDB authorized users)
+        if user_id not in sudo_users and not authorized_users_collection.find_one({"user_id": user_id}):
+            # Delete the message if the user is neither authorized nor an admin
             bot.delete_message(chat_id=chat_id, message_id=message_id)
             
             # Send a message notifying about the deletion
-            bot.send_message(chat_id=chat_id, text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ʜɪs ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ.", parse_mode='HTML')
+            bot.send_message(chat_id=chat_id, text=f"{user_mention} Just edited a message, I have deleted their edited message.", parse_mode='HTML')
+
 # MongoDB collection for sudo users
 sudo_users_collection = db['sudo_users']
 
@@ -246,6 +254,8 @@ def rmsudo(update: Update, context: CallbackContext):
             update.message.reply_text(f"Failed to remove from MongoDB: {e}")
     else:
         update.message.reply_text(f"{sudo_user_obj.user.username} ɪs ɴᴏᴛ ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
+
+
 def sudo_list(update: Update, context: CallbackContext):
     # Check if the user is the owner
     if update.effective_user.id != OWNER_ID:
@@ -344,32 +354,6 @@ def unauth(update: Update, context: CallbackContext):
     authorized_users_collection.delete_one({"user_id": user_id})
     update.message.reply_text(f"{user_to_unauth.first_name} has been unauthorized.")
     
-# Modify the check_edit function to avoid deleting messages from authorized users or admins
-def check_edit(update: Update, context: CallbackContext):
-    bot: Bot = context.bot
-
-    # Check if the update is an edited message
-    if update.edited_message:
-        edited_message = update.edited_message
-        
-        # Get the chat ID and message ID
-        chat_id = edited_message.chat_id
-        message_id = edited_message.message_id
-        
-        # Get the user who edited the message
-        user_id = edited_message.from_user.id
-        
-        # Create the mention for the user
-        user_mention = f"<a href='tg://user?id={user_id}'>{html.escape(edited_message.from_user.first_name)}</a>"
-        
-        # Check if the user is authorized or admin
-        if user_id not in sudo_users and not authorized_users_collection.find_one({"user_id": user_id}):
-            # Delete the message if the user is neither authorized nor an admin
-            bot.delete_message(chat_id=chat_id, message_id=message_id)
-            
-            # Send a message notifying about the deletion
-            bot.send_message(chat_id=chat_id, text=f"{user_mention} Just edited a message, I have deleted his edited message.", parse_mode='HTML')
-
 # Register the sudo_list command hand
 def send_stats(update: Update, context: CallbackContext):
     user = update.effective_user
@@ -541,6 +525,7 @@ def main():
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
+    dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
     dispatcher.add_handler(CommandHandler("clone", clone))
     dispatcher.add_handler(CommandHandler("auth", auth))
@@ -554,7 +539,3 @@ def main():
 if __name__ == '__main__':
     main()
     # Start the bot
-
-
-
-        
