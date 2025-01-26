@@ -166,9 +166,51 @@ def check_edit(update: Update, context: CallbackContext):
             
             # Send a message notifying about the deletion
             bot.send_message(chat_id=chat_id, text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ʜɪs ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ.", parse_mode='HTML')
-
+# MongoDB collection for sudo users
+sudo_users_collection = db['sudo_users']
 
 def add_sudo(update: Update, context: CallbackContext):
+    user = update.effective_user
+    chat_id = update.effective_chat.id
+    
+    # Check if the user is the owner
+    if user.id != OWNER_ID:
+        update.message.reply_text("You don't have permission to use this command.")
+        return
+    
+    # Check if a username or user ID is provided
+    if len(context.args) != 1:
+        update.message.reply_text("Usage: /addsudo <username or user ID>")
+        return
+    
+    sudo_user = context.args[0]
+    
+    # Resolve the user ID from username if provided
+    try:
+        sudo_user_obj = context.bot.get_chat_member(chat_id=chat_id, user_id=sudo_user)
+        sudo_user_id = sudo_user_obj.user.id
+    except Exception as e:
+        update.message.reply_text(f"Failed to resolve user: {e}")
+        return
+    
+    # Add sudo user ID to the database if not already present
+    if sudo_users_collection.find_one({"user_id": sudo_user_id}):
+        update.message.reply_text(f"{sudo_user_obj.user.username} is already a sudo user.")
+        return
+    
+    # Add sudo user to the database
+    try:
+        sudo_users_collection.insert_one({
+            "user_id": sudo_user_id,
+            "username": sudo_user_obj.user.username,
+            "first_name": sudo_user_obj.user.first_name
+        })
+        update.message.reply_text(f"Added {sudo_user_obj.user.username} as a sudo user.")
+    except Exception as e:
+        update.message.reply_text(f"Failed to add sudo user: {e}")
+
+# Add the /rmsudo command to remove a sudo user
+def rmsudo(update: Update, context: CallbackContext):
     user = update.effective_user
     chat_id = update.effective_chat.id
     
@@ -179,7 +221,7 @@ def add_sudo(update: Update, context: CallbackContext):
     
     # Check if a username or user ID is provided
     if len(context.args) != 1:
-        update.message.reply_text("ᴜsᴀɢᴇ: /addsudo <username or user ID>")
+        update.message.reply_text("ᴜsᴀɢᴇ: /rmsudo <username or user ID>")
         return
     
     sudo_user = context.args[0]
@@ -192,51 +234,44 @@ def add_sudo(update: Update, context: CallbackContext):
         update.message.reply_text(f"ғᴀɪʟᴇᴅ ᴛᴏ ʀᴇsᴏʟᴠᴇ ᴜsᴇʀ: {e}")
         return
     
-    # Add sudo user ID to the list if not already present
-    if sudo_user_id not in sudo_users:
-        sudo_users.append(sudo_user_id)
-        update.message.reply_text(f"ᴀᴅᴅᴇᴅ {sudo_user_obj.user.username} ᴀs ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
+    # Remove sudo user from the list if they are a sudo user
+    if sudo_user_id in sudo_users:
+        sudo_users.remove(sudo_user_id)
+
+        # Also remove the sudo user from the MongoDB collection
+        try:
+            db.sudo_users.delete_one({"user_id": sudo_user_id})
+            update.message.reply_text(f"ʀᴇmᴏᴠᴇᴅ {sudo_user_obj.user.username} ᴀs ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
+        except Exception as e:
+            update.message.reply_text(f"Failed to remove from MongoDB: {e}")
     else:
-        update.message.reply_text(f"{sudo_user_obj.user.username} ɪs ᴀʟʀᴇᴀᴅʏ ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
-
-
+        update.message.reply_text(f"{sudo_user_obj.user.username} ɪs ɴᴏᴛ ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
 def sudo_list(update: Update, context: CallbackContext):
     # Check if the user is the owner
     if update.effective_user.id != OWNER_ID:
-        update.message.reply_text("ʏᴏᴜ ᴅᴏɴ'ᴛ  ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
+        update.message.reply_text("You don't have permission to use this command.")
         return
 
     # Prepare the response message with SUDO_ID users
-    text = "ʟɪsᴛ ᴏғ sᴜᴅᴏ ᴜsᴇʀs:\n"
+    text = "List of sudo users:\n"
     count = 1
-    smex = 0
 
-    # Add the owner
-    try:
-        owner = context.bot.get_chat(OWNER_ID)
-        owner_mention = mention_markdown(OWNER_ID, owner.first_name)
-        text += f"{count} {owner_mention}\n"
-    except Exception as e:
-        update.message.reply_text(f"Failed to get owner details: {e}")
-
-    # Add other sudo users
-    for user_id in SUDO_ID:
-        if user_id != SUDO_ID:
-            try:
-                user = context.bot.get_chat(user_id)
-                user_mention = mention_markdown(user_id, user.first_name)
-                if smex == 0:
-                    smex += 1
-                count += 1                
-                text += f"{count} {user_mention}\n"
-            except Exception as e:
-                update.message.reply_text(f"Failed to get user details for user_id {user_id}: {e}")
+    # Fetch sudo users from MongoDB
+    sudo_users_cursor = sudo_users_collection.find({})
+    
+    for user_data in sudo_users_cursor:
+        try:
+            user_mention = mention_markdown(user_data["user_id"], user_data["first_name"])
+            text += f"{count}. {user_mention}\n"
+            count += 1
+        except Exception as e:
+            update.message.reply_text(f"Failed to fetch sudo user details: {e}")
+            return
 
     if not text.strip():
         update.message.reply_text("No sudo users found.")
     else:
         update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
-
 # MongoDB collection for authorized users
 authorized_users_collection = db['authorized_users']
 
@@ -269,7 +304,11 @@ def auth(update: Update, context: CallbackContext):
 
     # Add to the database
     try:
-        authorized_users_collection.insert_one({"user_id": user_id, "username": user_to_auth.username, "first_name": user_to_auth.first_name})
+        authorized_users_collection.insert_one({
+            "user_id": user_id,
+            "username": user_to_auth.username,
+            "first_name": user_to_auth.first_name
+        })
         update.message.reply_text(f"{user_to_auth.first_name} has been authorized.")
     except DuplicateKeyError:
         update.message.reply_text(f"{user_to_auth.first_name} is already in the database.")
@@ -304,7 +343,7 @@ def unauth(update: Update, context: CallbackContext):
     # Remove from the database
     authorized_users_collection.delete_one({"user_id": user_id})
     update.message.reply_text(f"{user_to_unauth.first_name} has been unauthorized.")
-
+    
 # Modify the check_edit function to avoid deleting messages from authorized users or admins
 def check_edit(update: Update, context: CallbackContext):
     bot: Bot = context.bot
