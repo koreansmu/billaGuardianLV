@@ -237,6 +237,101 @@ def sudo_list(update: Update, context: CallbackContext):
     else:
         update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
+
+# MongoDB collection for authorized users
+authorized_users_collection = db['authorized_users']
+
+# Add the /auth command to authorize a user
+def auth(update: Update, context: CallbackContext):
+    user = update.effective_user
+    chat_id = update.effective_chat.id
+    reply_message = update.message.reply_to_message
+    username = context.args[0] if len(context.args) > 0 else None
+    
+    if not username and not reply_message:
+        update.message.reply_text("Usage: /auth <@username> or reply to a message.")
+        return
+    
+    if reply_message:
+        user_to_auth = reply_message.from_user
+    elif username:
+        try:
+            user_to_auth = context.bot.get_chat(username)
+        except Exception as e:
+            update.message.reply_text(f"Failed to find user {username}: {e}")
+            return
+
+    user_id = user_to_auth.id
+
+    # Check if the user is already authorized
+    if authorized_users_collection.find_one({"user_id": user_id}):
+        update.message.reply_text(f"{user_to_auth.first_name} is already authorized.")
+        return
+
+    # Add to the database
+    try:
+        authorized_users_collection.insert_one({"user_id": user_id, "username": user_to_auth.username, "first_name": user_to_auth.first_name})
+        update.message.reply_text(f"{user_to_auth.first_name} has been authorized.")
+    except DuplicateKeyError:
+        update.message.reply_text(f"{user_to_auth.first_name} is already in the database.")
+
+# Add the /unauth command to unauthorize a user
+def unauth(update: Update, context: CallbackContext):
+    user = update.effective_user
+    chat_id = update.effective_chat.id
+    reply_message = update.message.reply_to_message
+    username = context.args[0] if len(context.args) > 0 else None
+    
+    if not username and not reply_message:
+        update.message.reply_text("Usage: /unauth <@username> or reply to a message.")
+        return
+    
+    if reply_message:
+        user_to_unauth = reply_message.from_user
+    elif username:
+        try:
+            user_to_unauth = context.bot.get_chat(username)
+        except Exception as e:
+            update.message.reply_text(f"Failed to find user {username}: {e}")
+            return
+
+    user_id = user_to_unauth.id
+
+    # Check if the user is authorized
+    if not authorized_users_collection.find_one({"user_id": user_id}):
+        update.message.reply_text(f"{user_to_unauth.first_name} is not authorized.")
+        return
+
+    # Remove from the database
+    authorized_users_collection.delete_one({"user_id": user_id})
+    update.message.reply_text(f"{user_to_unauth.first_name} has been unauthorized.")
+
+# Modify the check_edit function to avoid deleting messages from authorized users or admins
+def check_edit(update: Update, context: CallbackContext):
+    bot: Bot = context.bot
+
+    # Check if the update is an edited message
+    if update.edited_message:
+        edited_message = update.edited_message
+        
+        # Get the chat ID and message ID
+        chat_id = edited_message.chat_id
+        message_id = edited_message.message_id
+        
+        # Get the user who edited the message
+        user_id = edited_message.from_user.id
+        
+        # Create the mention for the user
+        user_mention = f"<a href='tg://user?id={user_id}'>{html.escape(edited_message.from_user.first_name)}</a>"
+        
+        # Check if the user is authorized or admin
+        if user_id not in sudo_users and not authorized_users_collection.find_one({"user_id": user_id}):
+            # Delete the message if the user is neither authorized nor an admin
+            bot.delete_message(chat_id=chat_id, message_id=message_id)
+            
+            # Send a message notifying about the deletion
+            bot.send_message(chat_id=chat_id, text=f"{user_mention} Just edited a message, I have deleted his edited message.", parse_mode='HTML')
+
 # Register the sudo_list command hand
 
 def send_stats(update: Update, context: CallbackContext):
@@ -411,6 +506,8 @@ def main():
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
     dispatcher.add_handler(CommandHandler("clone", clone))
+    dispatcher.add_handler(CommandHandler("auth", auth))
+    dispatcher.add_handler(CommandHandler("unauth", unauth))
     dispatcher.add_handler(CommandHandler("stats", send_stats))
 
     # Start the Bot
