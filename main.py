@@ -415,11 +415,20 @@ active_groups_collection = db["active_groups"]
 list_groups = []  # To store all groups
 active_groups = []  # To store only active groups
 
-# Function to fetch active groups from MongoDB
-def fetch_active_groups_from_db():
-    return list(active_groups_collection.find({}))
 
-# Handler for /activegroups command to list active groups where the bot is currently active
+def fetch_active_groups_from_db():
+    try:
+        # Replace with your MongoDB URI if necessary
+        client = pymongo.MongoClient("mongodb://localhost:27017")
+        db = client['your_database_name']  # Replace with your database name
+        active_groups_collection = db['active_groups']  # Replace with your collection name
+        active_groups = list(active_groups_collection.find())
+        return active_groups
+    except ConnectionError as e:
+        print(f"Failed to connect to MongoDB: {e}")
+        return None
+
+# Handler for /activegroups command
 def list_active_groups(update: Update, context: CallbackContext):
     if update.message.from_user.id != OWNER_ID:
         update.message.reply_text("You don't have permission to use this command.")
@@ -429,7 +438,7 @@ def list_active_groups(update: Update, context: CallbackContext):
     active_groups_from_db = fetch_active_groups_from_db()
 
     if not active_groups_from_db:
-        update.message.reply_text("The bot is not active in any groups.")
+        update.message.reply_text("The bot is not active in any groups or failed to connect to MongoDB.")
         return
 
     group_list_msg = "Active groups where the bot is currently active:\n"
