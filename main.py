@@ -243,9 +243,9 @@ def rmsudo(update: Update, context: CallbackContext):
         if sudo_user.startswith('@'):  # Username provided
             username = sudo_user.lstrip('@')
             
-            # Get user information using the username
-            user_obj = context.bot.get_chat(username)
-            sudo_user_id = user_obj.id
+            # Get the user ID by username using 'get_chat_member' (NOT 'get_chat')
+            chat_member = context.bot.get_chat_member(chat_id, username=username)
+            sudo_user_id = chat_member.user.id
         else:  # Direct user ID provided
             sudo_user_id = int(sudo_user)
 
