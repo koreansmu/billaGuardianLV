@@ -453,6 +453,7 @@ def track_groups(update: Update, context: CallbackContext):
 
             # Optionally, remove from tracked_groups list
             tracked_groups = [group for group in tracked_groups if group["group_id"] != group_info["group_id"]]
+
                 
 # Handler for /listgroups command to list all groups where the bot is added
 def list_groups(update: Update, context: CallbackContext):
@@ -698,8 +699,10 @@ def main():
     # Register handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
+    dispatcher.add_handler(new_chat_members_handler)
+    dispatcher.add_handler(left_chat_member_handler)
     new_chat_members_handler = MessageHandler(Filters.status_update.new_chat_members, track_groups)
-    left_chat_member_handler = MessageHandler(filters.status_update.left_chat_member, track_groups)
+    left_chat_member_handler = MessageHandler(Filters.status_update.left_chat_member, track_groups)
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
