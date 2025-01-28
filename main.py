@@ -407,36 +407,52 @@ active_groups = []  # To store only active groups
 def fetch_active_groups_from_db():
     return list(active_groups_collection.find({}))
 
-# Function to track when the bot is added to a group
+# Function to track when the bot is added or removed from a group
 def track_groups(update: Update, context: CallbackContext):
-    # Check if the update is related to a new chat member event
-    if update.chat_member:
-        chat = update.chat_member.chat
-        new_member_status = update.chat_member.new_chat_member.status
+    # Check for new chat members (user joins)
+    if update.message.new_chat_members:
+        chat = update.message.chat
+        new_members = update.message.new_chat_members
 
-        if chat.type in ['supergroup', 'group']:
-            group_info = {
-                "group_name": chat.title,
-                "group_id": chat.id,
-                "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
-            }
+        for new_member in new_members:
+            # Process each new member
+            if new_member.id == context.bot.id:
+                # The bot has been added to the group
+                group_info = {
+                    "group_name": chat.title,
+                    "group_id": chat.id,
+                    "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
+                }
 
-            # Add to the tracked_groups list (all groups)
-            if group_info not in tracked_groups:
-                tracked_groups.append(group_info)
+                # Add the group to tracked_groups list if it's not already there
+                if group_info not in tracked_groups:
+                    tracked_groups.append(group_info)
 
-            # Add to active_groups if the bot is added to the group
-            if new_member_status == "member":
-                # Add to active_groups in MongoDB
+                # Add the group info to the active_groups collection in MongoDB
                 active_groups_collection.update_one(
                     {"group_id": group_info["group_id"]},
                     {"$set": group_info},
                     upsert=True
                 )
 
-            # If the bot is removed, remove it from active_groups in MongoDB
-            elif new_member_status == "left":
-                active_groups_collection.delete_one({"group_id": group_info["group_id"]})
+    # Check for left chat member (user leaves)
+    elif update.message.left_chat_member:
+        chat = update.message.chat
+        left_member = update.message.left_chat_member
+
+        if left_member.id == context.bot.id:
+            # The bot was removed from the group
+            group_info = {
+                "group_name": chat.title,
+                "group_id": chat.id,
+                "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
+            }
+
+            # Remove the group from active_groups collection in MongoDB
+            active_groups_collection.delete_one({"group_id": group_info["group_id"]})
+
+            # Optionally, remove from tracked_groups list
+            tracked_groups = [group for group in tracked_groups if group["group_id"] != group_info["group_id"]]
                 
 # Handler for /listgroups command to list all groups where the bot is added
 def list_groups(update: Update, context: CallbackContext):
@@ -682,9 +698,8 @@ def main():
     # Register handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
-    dispatcher.add_handler(MessageHandler(Filters.status_update.chat_member, track_groups))
-    dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, track_groups))
-    dispatcher.add_handler(ChatMemberHandler(track_groups))
+    new_chat_members_handler = MessageHandler(Filters.status_update.new_chat_members, track_groups)
+    left_chat_member_handler = MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, track_groups)
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
