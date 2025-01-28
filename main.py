@@ -168,12 +168,14 @@ def check_edit(update: Update, context: CallbackContext):
         
         # Check if the user is authorized or admin (check against sudo users and MongoDB authorized users)
         if user_id not in sudo_users and not authorized_users_collection.find_one({"user_id": user_id}):
-            # Delete the message if the user is neither authorized nor an admin
-            bot.delete_message(chat_id=chat_id, message_id=message_id)
-            
-            # Send a message notifying about the deletion
-            bot.send_message(chat_id=chat_id, text=f"{user_mention} Just edited a message, I have deleted their edited message.", parse_mode='HTML')
-
+            # Ensure user is not an admin
+            chat_member = bot.get_chat_member(chat_id, user_id)
+            if chat_member.status not in ['administrator', 'creator']:  # Only delete if the user is not an admin
+                # Delete the message if the user is neither authorized nor an admin
+                bot.delete_message(chat_id=chat_id, message_id=message_id)
+                
+                # Send a message notifying about the deletion
+                bot.send_message(chat_id=chat_id, text=f"{user_mention} Just edited a message, I have deleted their edited message.", parse_mode='HTML')
 # MongoDB collection for sudo users
 sudo_users_collection = db['sudo_users']
 
