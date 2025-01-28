@@ -176,6 +176,7 @@ def check_edit(update: Update, context: CallbackContext):
                 
                 # Send a message notifying about the deletion
                 bot.send_message(chat_id=chat_id, text=f"{user_mention} Just edited a message, I have deleted their edited message.", parse_mode='HTML')
+
 # MongoDB collection for sudo users
 sudo_users_collection = db['sudo_users']
 
@@ -226,22 +227,27 @@ def rmsudo(update: Update, context: CallbackContext):
     
     # Check if the user is the owner
     if user.id != OWNER_ID:
-        update.message.reply_text("ʏᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
+        update.message.reply_text("You don't have permission to use this command.")
         return
     
     # Check if a username or user ID is provided
     if len(context.args) != 1:
-        update.message.reply_text("ᴜsᴀɢᴇ: /rmsudo <username or user ID>")
+        update.message.reply_text("Usage: /rmsudo <username or user ID>")
         return
     
     sudo_user = context.args[0]
     
-    # Resolve the user ID from username if provided
     try:
-        sudo_user_obj = context.bot.get_chat_member(chat_id=chat_id, user_id=sudo_user)
-        sudo_user_id = sudo_user_obj.user.id
+        # Try to resolve user ID from username if provided
+        if sudo_user.startswith('@'):  # Username provided
+            sudo_user_obj = context.bot.get_chat_member(chat_id=chat_id, user_id=sudo_user)
+            sudo_user_id = sudo_user_obj.user.id
+        else:  # Direct user ID provided
+            sudo_user_id = int(sudo_user)
+
+        sudo_user_obj = context.bot.get_chat_member(chat_id, sudo_user_id)
     except Exception as e:
-        update.message.reply_text(f"ғᴀɪʟᴇᴅ ᴛᴏ ʀᴇsᴏʟᴠᴇ ᴜsᴇʀ: {e}")
+        update.message.reply_text(f"Failed to resolve user: {e}")
         return
     
     # Remove sudo user from the list if they are a sudo user
@@ -251,12 +257,11 @@ def rmsudo(update: Update, context: CallbackContext):
         # Also remove the sudo user from the MongoDB collection
         try:
             db.sudo_users.delete_one({"user_id": sudo_user_id})
-            update.message.reply_text(f"ʀᴇmᴏᴠᴇᴅ {sudo_user_obj.user.username} ᴀs ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
+            update.message.reply_text(f"Removed {sudo_user_obj.user.username} as a sudo user.")
         except Exception as e:
             update.message.reply_text(f"Failed to remove from MongoDB: {e}")
     else:
-        update.message.reply_text(f"{sudo_user_obj.user.username} ɪs ɴᴏᴛ ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
-
+        update.message.reply_text(f"{sudo_user_obj.user.username} is not a sudo user.")
 
 def sudo_list(update: Update, context: CallbackContext):
     # Check if the user is the owner
@@ -382,6 +387,50 @@ def send_stats(update: Update, context: CallbackContext):
         logger.error(f"Error in send_stats function: {e}")
         update.message.reply_text("Failed to fetch statistics.")
  
+# List to track the groups where the bot is active
+tracked_groups = []
+
+# Function to track when the bot is added to a group
+@app.on_chat_member()
+async def track_groups(client, message):
+    chat = message.chat
+
+    # Check if the chat is a group and not a private chat
+    if chat.type in ['supergroup', 'group']:
+        group_info = {
+            "group_name": chat.title,
+            "group_id": chat.id,
+            "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
+        }
+
+        # Add to the tracked_groups list
+        tracked_groups.append(group_info)
+
+# Command to list tracked groups with clickable group names for public groups
+def list_tracked_groups(update: Update, context: CallbackContext):
+    if update.effective_user.id != OWNER_ID:
+        update.message.reply_text("You don't have permission to use this command.")
+        return
+
+    # Generate a list of tracked groups
+    if not tracked_groups:
+        update.message.reply_text("The bot is not active in any groups.")
+        return
+
+    group_list_msg = "Groups where the bot is active:\n"
+    for group in tracked_groups:
+        # If the group is public, make the group name clickable
+        if group["invite_link"] != "No invite link available":
+            group_list_msg += f"- <a href='{group['invite_link']}'>[{group['group_name']}]</a>\n"
+        else:
+            group_list_msg += f"- {group['group_name']}\n"
+
+    update.message.reply_text(group_list_msg, parse_mode=ParseMode.HTML)
+
+# Global list to store active cloned bots
+active_cloned_bots = []
+
+# Update the clone function to track active cloned bots
 def clone(update: Update, context: CallbackContext):
     user = update.effective_user
     chat_id = update.effective_chat.id
@@ -418,12 +467,35 @@ def clone(update: Update, context: CallbackContext):
         # Start the cloned bot
         clone_updater.start_polling()
 
+        # Track the active cloned bot
+        active_cloned_bots.append({
+            "bot_username": new_bot_info.username,
+            "bot_token": new_bot_token
+        })
+
         update.message.reply_text(
             f"sᴜᴄᴄᴇssғᴜʟʟʏ ᴄʟᴏɴᴇᴅ ᴛʜᴇ ʙᴏᴛ {new_bot_info.username} ({new_bot_info.id})."
         )
 
     except Exception as e:
         update.message.reply_text(f"𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗰𝗹𝗼𝗻𝗲 𝘁𝗵𝗲 𝗯𝗼𝘁: {e}")
+
+# Command to list active cloned bots
+def list_active_cloned_bots(update: Update, context: CallbackContext):
+    if update.effective_user.id != OWNER_ID:
+        update.message.reply_text("You don't have permission to use this command.")
+        return
+
+    # Generate a list of active cloned bots
+    if not active_cloned_bots:
+        update.message.reply_text("No cloned bots are active at the moment.")
+        return
+
+    active_bots_msg = "Active Cloned Bots:\n"
+    for bot in active_cloned_bots:
+        active_bots_msg += f"- @{bot['bot_username']}\n"
+
+    update.message.reply_text(active_bots_msg)
 
 # Kick cloned bot command
 def kick_clone(update: Update, context: CallbackContext):
@@ -560,6 +632,8 @@ def main():
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
     dispatcher.add_handler(CommandHandler("clone", clone))
     dispatcher.add_handler(CommandHandler("kickclone", kick_clone))
+    dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots))
+    dispatcher.add_handler(CommandHandler("listgroups", list_tracked_groups))
     dispatcher.add_handler(CommandHandler("auth", auth))
     dispatcher.add_handler(CommandHandler("unauth", unauth))
     dispatcher.add_handler(CommandHandler("stats", send_stats))
