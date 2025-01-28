@@ -699,7 +699,7 @@ def main():
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
     new_chat_members_handler = MessageHandler(Filters.status_update.new_chat_members, track_groups)
-    left_chat_member_handler = MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, track_groups)
+    left_chat_member_handler = MessageHandler(filters.status_update.left_chat_member, track_groups)
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
