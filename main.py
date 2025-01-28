@@ -414,27 +414,6 @@ active_groups = []  # To store only active groups
 def fetch_active_groups_from_db():
     return list(active_groups_collection.find({}))
 
-# Handler for /listgroups command to list all groups where the bot is added
-def list_groups(update: Update, context: CallbackContext):
-    if update.message.from_user.id != OWNER_ID:
-        update.message.reply_text("You don't have permission to use this command.")
-        return
-
-    # Generate a list of all groups (tracked groups)
-    if not tracked_groups:
-        update.message.reply_text("The bot has not been added to any groups yet.")
-        return
-
-    group_list_msg = "Groups where the bot is added:\n"
-    for group in tracked_groups:
-        if group["invite_link"] != "No invite link available":
-            group_list_msg += f"- <a href='{group['invite_link']}'>[{group['group_name']}]</a>\n"
-        else:
-            group_list_msg += f"- {group['group_name']}\n"
-
-    # Send the list of all groups
-    update.message.reply_text(group_list_msg, parse_mode="HTML")
-
 # Handler for /activegroups command to list active groups where the bot is currently active
 def list_active_groups(update: Update, context: CallbackContext):
     if update.message.from_user.id != OWNER_ID:
@@ -661,7 +640,6 @@ def main():
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
-    dispatcher.add_handler(CommandHandler("listgroups", list_groups))
     dispatcher.add_handler(CommandHandler("activegroups", list_active_groups))
     dispatcher.add_handler(CommandHandler("clone", clone))
     dispatcher.add_handler(CommandHandler("kickclone", kick_clone))
