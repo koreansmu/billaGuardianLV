@@ -651,10 +651,6 @@ def main():
     # Register handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
-    dispatcher.add_handler(new_chat_members_handler)
-    dispatcher.add_handler(left_chat_member_handler)
-    new_chat_members_handler = MessageHandler(Filters.status_update.new_chat_members, track_groups)
-    left_chat_member_handler = MessageHandler(Filters.status_update.left_chat_member, track_groups)
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
