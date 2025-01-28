@@ -239,18 +239,17 @@ def rmsudo(update: Update, context: CallbackContext):
     sudo_user = context.args[0]
     
     try:
-        # Try to resolve user ID from username if provided
+        # Check if a username is provided (starts with '@')
         if sudo_user.startswith('@'):  # Username provided
-            # Remove '@' from the username
             username = sudo_user.lstrip('@')
             
-            # Get user ID from username
-            chat_member = context.bot.get_chat_member(chat_id, username=username)
-            sudo_user_id = chat_member.user.id
+            # Get user information using the username
+            user_obj = context.bot.get_chat(username)
+            sudo_user_id = user_obj.id
         else:  # Direct user ID provided
             sudo_user_id = int(sudo_user)
 
-        # Ensure the user is actually in the chat
+        # Ensure the user is in the chat (use user_id)
         sudo_user_obj = context.bot.get_chat_member(chat_id, sudo_user_id)
         
     except Exception as e:
@@ -264,11 +263,19 @@ def rmsudo(update: Update, context: CallbackContext):
         # Also remove the sudo user from the MongoDB collection
         try:
             db.sudo_users.delete_one({"user_id": sudo_user_id})
-            update.message.reply_text(f"Removed {sudo_user_obj.user.username} as a sudo user.")
+            # Send feedback with both username and user ID
+            if sudo_user_obj.user.username:
+                update.message.reply_text(f"Removed @{sudo_user_obj.user.username} as a sudo user.")
+            else:
+                update.message.reply_text(f"Removed user with ID {sudo_user_id} as a sudo user.")
         except Exception as e:
             update.message.reply_text(f"Failed to remove from MongoDB: {e}")
     else:
-        update.message.reply_text(f"{sudo_user_obj.user.username} is not a sudo user.")
+        if sudo_user_obj.user.username:
+            update.message.reply_text(f"@{sudo_user_obj.user.username} is not a sudo user.")
+        else:
+            update.message.reply_text(f"User with ID {sudo_user_id} is not a sudo user.")
+
 
 def sudo_list(update: Update, context: CallbackContext):
     # Check if the user is the owner
