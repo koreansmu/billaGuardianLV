@@ -423,6 +423,35 @@ def clone(update: Update, context: CallbackContext):
     except Exception as e:
         update.message.reply_text(f"𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗰𝗹𝗼𝗻𝗲 𝘁𝗵𝗲 𝗯𝗼𝘁: {e}")
 
+# Kick cloned bot command
+def kick_clone(update: Update, context: CallbackContext):
+    user = update.effective_user
+    chat_id = update.effective_chat.id
+
+    # Check if the user is the owner
+    if user.id != OWNER_ID:
+        update.message.reply_text("ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴍᴅ.")
+        return
+
+    # Ensure that a bot token is provided
+    if len(context.args) != 1:
+        update.message.reply_text("𝗨𝘀𝗮𝗴𝗲: /kickclone <Your Bot Token>")
+        return
+
+    clone_bot_token = context.args[0]
+
+    try:
+        # Disconnect and remove the cloned bot
+        cloned_bot = Bot(token=clone_bot_token)
+        cloned_bot_info = cloned_bot.get_me()
+
+        # Perform necessary cleanup for the cloned bot (you may want to shut it down)
+        cloned_bot.stop()
+
+        update.message.reply_text(f"ʙᴏᴛ {cloned_bot_info.username} ({cloned_bot_info.id}) ʜᴀs ʙᴇᴇɴ ᴄʟᴏsᴇᴅ ᴀɴᴅ ʀᴇᴍᴏᴠᴇᴅ.")
+    except Exception as e:
+        update.message.reply_text(f"𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗿𝗲𝗺𝗼𝘃𝗲 𝘁𝗵𝗲 𝗯𝗼𝘁: {e}")
+
 # Command handler for /getid
 def get_id(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
@@ -528,6 +557,7 @@ def main():
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
     dispatcher.add_handler(CommandHandler("clone", clone))
+    dispatcher.add_handler(CommandHandler("kickclone", kick_clone))
     dispatcher.add_handler(CommandHandler("auth", auth))
     dispatcher.add_handler(CommandHandler("unauth", unauth))
     dispatcher.add_handler(CommandHandler("stats", send_stats))
