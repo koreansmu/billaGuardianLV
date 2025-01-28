@@ -243,7 +243,7 @@ def rmsudo(update: Update, context: CallbackContext):
         if sudo_user.startswith('@'):  # Username provided
             username = sudo_user.lstrip('@')
             
-            # Get the user ID by username using 'get_chat_member' (NOT 'get_chat')
+            # Resolve username to user_id (this will work only if the user is in the group)
             chat_member = context.bot.get_chat_member(chat_id, username=username)
             sudo_user_id = chat_member.user.id
         else:  # Direct user ID provided
@@ -256,18 +256,23 @@ def rmsudo(update: Update, context: CallbackContext):
         update.message.reply_text(f"Failed to resolve user: {e}")
         return
     
-    # Remove sudo user from the list if they are a sudo user
+    # Now let's handle the removal of the sudo user from both the list and MongoDB
     if sudo_user_id in sudo_users:
         sudo_users.remove(sudo_user_id)
 
-        # Also remove the sudo user from the MongoDB collection
+        # Try removing the sudo user from the MongoDB collection
         try:
-            db.sudo_users.delete_one({"user_id": sudo_user_id})
-            # Send feedback with both username and user ID
-            if sudo_user_obj.user.username:
-                update.message.reply_text(f"Removed @{sudo_user_obj.user.username} as a sudo user.")
+            result = db.sudo_users.delete_one({"user_id": sudo_user_id})
+            
+            if result.deleted_count > 0:
+                # Success: send confirmation with username (if exists) or ID
+                if sudo_user_obj.user.username:
+                    update.message.reply_text(f"Removed @{sudo_user_obj.user.username} as a sudo user.")
+                else:
+                    update.message.reply_text(f"Removed user with ID {sudo_user_id} as a sudo user.")
             else:
-                update.message.reply_text(f"Removed user with ID {sudo_user_id} as a sudo user.")
+                update.message.reply_text(f"Failed to find user with ID {sudo_user_id} in the database.")
+                
         except Exception as e:
             update.message.reply_text(f"Failed to remove from MongoDB: {e}")
     else:
