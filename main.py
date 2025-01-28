@@ -388,15 +388,23 @@ def send_stats(update: Update, context: CallbackContext):
         logger.error(f"Error in send_stats function: {e}")
         update.message.reply_text("Failed to fetch statistics.")
  
-# List to track the groups where the bot is active
-tracked_groups = []
+# MongoDB connection setup
+client = MongoClient("mongodb://localhost:27017/")
+db = client["your_database_name"]
+active_groups_collection = db["active_groups"]
+
+# Placeholder for tracked groups
+tracked_groups = []  # To store all groups
+active_groups = []  # To store only active groups
+
+# Function to fetch active groups from MongoDB
+def fetch_active_groups_from_db():
+    return list(active_groups_collection.find({}))
 
 # Function to track when the bot is added to a group
-@app.on_chat_member()
-async def track_groups(client, message):
-    chat = message.chat
+def track_groups(update: Update, context: CallbackContext):
+    chat = update.message.chat
 
-    # Check if the chat is a group and not a private chat
     if chat.type in ['supergroup', 'group']:
         group_info = {
             "group_name": chat.title,
@@ -404,29 +412,66 @@ async def track_groups(client, message):
             "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
         }
 
-        # Add to the tracked_groups list
-        tracked_groups.append(group_info)
+        # Add to the tracked_groups list (all groups)
+        if group_info not in tracked_groups:
+            tracked_groups.append(group_info)
 
-# Command to list tracked groups with clickable group names for public groups
-def list_tracked_groups(update: Update, context: CallbackContext):
-    if update.effective_user.id != OWNER_ID:
+        # Add to active_groups if the bot is added to the group
+        if update.new_chat_member.status == "member":
+            # Add to active_groups in MongoDB
+            active_groups_collection.update_one(
+                {"group_id": group_info["group_id"]},
+                {"$set": group_info},
+                upsert=True
+            )
+
+        # If the bot is removed, remove it from active_groups in MongoDB
+        elif update.new_chat_member.status == "left":
+            active_groups_collection.delete_one({"group_id": group_info["group_id"]})
+
+# Handler for /listgroups command to list all groups where the bot is added
+def list_groups(update: Update, context: CallbackContext):
+    if update.message.from_user.id != OWNER_ID:
         update.message.reply_text("You don't have permission to use this command.")
         return
 
-    # Generate a list of tracked groups
+    # Generate a list of all groups (tracked groups)
     if not tracked_groups:
-        update.message.reply_text("The bot is not active in any groups.")
+        update.message.reply_text("The bot has not been added to any groups yet.")
         return
 
-    group_list_msg = "Groups where the bot is active:\n"
+    group_list_msg = "Groups where the bot is added:\n"
     for group in tracked_groups:
-        # If the group is public, make the group name clickable
         if group["invite_link"] != "No invite link available":
             group_list_msg += f"- <a href='{group['invite_link']}'>[{group['group_name']}]</a>\n"
         else:
             group_list_msg += f"- {group['group_name']}\n"
 
-    update.message.reply_text(group_list_msg, parse_mode=ParseMode.HTML)
+    # Send the list of all groups
+    update.message.reply_text(group_list_msg, parse_mode="HTML")
+
+# Handler for /activegroups command to list active groups where the bot is currently active
+def list_active_groups(update: Update, context: CallbackContext):
+    if update.message.from_user.id != OWNER_ID:
+        update.message.reply_text("You don't have permission to use this command.")
+        return
+
+    # Fetch active groups from MongoDB
+    active_groups_from_db = fetch_active_groups_from_db()
+
+    if not active_groups_from_db:
+        update.message.reply_text("The bot is not active in any groups.")
+        return
+
+    group_list_msg = "Active groups where the bot is currently active:\n"
+    for group in active_groups_from_db:
+        if group["invite_link"] != "No invite link available":
+            group_list_msg += f"- <a href='{group['invite_link']}'>[{group['group_name']}]</a>\n"
+        else:
+            group_list_msg += f"- {group['group_name']}\n"
+
+    # Send the list of active groups
+    update.message.reply_text(group_list_msg, parse_mode="HTML")
 
 # Global list to store active cloned bots
 active_cloned_bots = []
@@ -628,9 +673,13 @@ def main():
     # Register handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, track_groups))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, track_groups))
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
+    dispatcher.add_handler(CommandHandler("listgroups", list_groups))
+    dispatcher.add_handler(CommandHandler("activegroups", list_active_groups))
     dispatcher.add_handler(CommandHandler("clone", clone))
     dispatcher.add_handler(CommandHandler("kickclone", kick_clone))
     dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots))
