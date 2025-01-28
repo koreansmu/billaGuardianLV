@@ -683,7 +683,6 @@ def main():
     dispatcher.add_handler(CommandHandler("clone", clone))
     dispatcher.add_handler(CommandHandler("kickclone", kick_clone))
     dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots))
-    dispatcher.add_handler(CommandHandler("listgroups", list_tracked_groups))
     dispatcher.add_handler(CommandHandler("auth", auth))
     dispatcher.add_handler(CommandHandler("unauth", unauth))
     dispatcher.add_handler(CommandHandler("stats", send_stats))
