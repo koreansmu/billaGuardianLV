@@ -400,61 +400,13 @@ db = client["your_database_name"]
 active_groups_collection = db["active_groups"]
 
 # Placeholder for tracked groups
-tracked_groups = []  # To store all groups
+list_groups = []  # To store all groups
 active_groups = []  # To store only active groups
 
 # Function to fetch active groups from MongoDB
 def fetch_active_groups_from_db():
     return list(active_groups_collection.find({}))
 
-# Function to track when the bot is added or removed from a group
-def track_groups(update: Update, context: CallbackContext):
-    # Check for new chat members (user joins)
-    if update.message.new_chat_members:
-        chat = update.message.chat
-        new_members = update.message.new_chat_members
-
-        for new_member in new_members:
-            # Process each new member
-            if new_member.id == context.bot.id:
-                # The bot has been added to the group
-                group_info = {
-                    "group_name": chat.title,
-                    "group_id": chat.id,
-                    "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
-                }
-
-                # Add the group to tracked_groups list if it's not already there
-                if group_info not in tracked_groups:
-                    tracked_groups.append(group_info)
-
-                # Add the group info to the active_groups collection in MongoDB
-                active_groups_collection.update_one(
-                    {"group_id": group_info["group_id"]},
-                    {"$set": group_info},
-                    upsert=True
-                )
-
-    # Check for left chat member (user leaves)
-    elif update.message.left_chat_member:
-        chat = update.message.chat
-        left_member = update.message.left_chat_member
-
-        if left_member.id == context.bot.id:
-            # The bot was removed from the group
-            group_info = {
-                "group_name": chat.title,
-                "group_id": chat.id,
-                "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
-            }
-
-            # Remove the group from active_groups collection in MongoDB
-            active_groups_collection.delete_one({"group_id": group_info["group_id"]})
-
-            # Optionally, remove from tracked_groups list
-            tracked_groups = [group for group in tracked_groups if group["group_id"] != group_info["group_id"]]
-
-                
 # Handler for /listgroups command to list all groups where the bot is added
 def list_groups(update: Update, context: CallbackContext):
     if update.message.from_user.id != OWNER_ID:
