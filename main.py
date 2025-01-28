@@ -530,14 +530,16 @@ def kick_clone(update: Update, context: CallbackContext):
     clone_bot_token = context.args[0]
 
     try:
-        # Disconnect and remove the cloned bot
+        # Create a Bot instance using the cloned bot's token
         cloned_bot = Bot(token=clone_bot_token)
+        
+        # Get the cloned bot's information
         cloned_bot_info = cloned_bot.get_me()
 
-        # Perform necessary cleanup for the cloned bot (you may want to shut it down)
-        cloned_bot.stop()
+        # Logout the cloned bot to stop its activities
+        cloned_bot.logout()
 
-        update.message.reply_text(f"ʙᴏᴛ {cloned_bot_info.username} ({cloned_bot_info.id}) ʜᴀs ʙᴇᴇɴ ᴄʟᴏsᴇᴅ ᴀɴᴅ ʀᴇᴍᴏᴠᴇᴅ.")
+        update.message.reply_text(f"ʙᴏᴛ {cloned_bot_info.username} ({cloned_bot_info.id}) ʜᴀs ʙᴇᴇɴ ʟᴏɢɢᴇᴅ ᴏᴜᴛ.")
     except Exception as e:
         update.message.reply_text(f"𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗿𝗲𝗺𝗼𝘃𝗲 𝘁𝗵𝗲 𝗯𝗼𝘁: {e}")
 
