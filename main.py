@@ -403,32 +403,35 @@ def fetch_active_groups_from_db():
 
 # Function to track when the bot is added to a group
 def track_groups(update: Update, context: CallbackContext):
-    chat = update.message.chat
+    # Check if the update is related to a new chat member event
+    if update.chat_member:
+        chat = update.chat_member.chat
+        new_member_status = update.chat_member.new_chat_member.status
 
-    if chat.type in ['supergroup', 'group']:
-        group_info = {
-            "group_name": chat.title,
-            "group_id": chat.id,
-            "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
-        }
+        if chat.type in ['supergroup', 'group']:
+            group_info = {
+                "group_name": chat.title,
+                "group_id": chat.id,
+                "invite_link": chat.invite_link if chat.invite_link else "No invite link available"
+            }
 
-        # Add to the tracked_groups list (all groups)
-        if group_info not in tracked_groups:
-            tracked_groups.append(group_info)
+            # Add to the tracked_groups list (all groups)
+            if group_info not in tracked_groups:
+                tracked_groups.append(group_info)
 
-        # Add to active_groups if the bot is added to the group
-        if update.new_chat_member.status == "member":
-            # Add to active_groups in MongoDB
-            active_groups_collection.update_one(
-                {"group_id": group_info["group_id"]},
-                {"$set": group_info},
-                upsert=True
-            )
+            # Add to active_groups if the bot is added to the group
+            if new_member_status == "member":
+                # Add to active_groups in MongoDB
+                active_groups_collection.update_one(
+                    {"group_id": group_info["group_id"]},
+                    {"$set": group_info},
+                    upsert=True
+                )
 
-        # If the bot is removed, remove it from active_groups in MongoDB
-        elif update.new_chat_member.status == "left":
-            active_groups_collection.delete_one({"group_id": group_info["group_id"]})
-
+            # If the bot is removed, remove it from active_groups in MongoDB
+            elif new_member_status == "left":
+                active_groups_collection.delete_one({"group_id": group_info["group_id"]})
+                
 # Handler for /listgroups command to list all groups where the bot is added
 def list_groups(update: Update, context: CallbackContext):
     if update.message.from_user.id != OWNER_ID:
@@ -673,8 +676,9 @@ def main():
     # Register handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, track_groups))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.chat_members, track_groups))
     dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, track_groups))
+    dispatcher.add_handler(ChatMemberHandler(track_groups))
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
