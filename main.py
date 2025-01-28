@@ -241,12 +241,18 @@ def rmsudo(update: Update, context: CallbackContext):
     try:
         # Try to resolve user ID from username if provided
         if sudo_user.startswith('@'):  # Username provided
-            sudo_user_obj = context.bot.get_chat_member(chat_id=chat_id, user_id=sudo_user)
-            sudo_user_id = sudo_user_obj.user.id
+            # Remove '@' from the username
+            username = sudo_user.lstrip('@')
+            
+            # Get user ID from username
+            chat_member = context.bot.get_chat_member(chat_id, username=username)
+            sudo_user_id = chat_member.user.id
         else:  # Direct user ID provided
             sudo_user_id = int(sudo_user)
 
+        # Ensure the user is actually in the chat
         sudo_user_obj = context.bot.get_chat_member(chat_id, sudo_user_id)
+        
     except Exception as e:
         update.message.reply_text(f"Failed to resolve user: {e}")
         return
