@@ -638,6 +638,8 @@ def main():
     dispatcher.add_handler(CommandHandler("auth", auth))
     dispatcher.add_handler(CommandHandler("unauth", unauth))
     dispatcher.add_handler(CommandHandler("stats", send_stats))
+    dispatcher.add_handler(CommandHandler("broadcast", broadcast_command))
+    dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command))
 
     # Start the Bot
     updater.start_polling()
