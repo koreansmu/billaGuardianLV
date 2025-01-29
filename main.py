@@ -314,6 +314,7 @@ authorized_users_collection = db['authorized_users']
 
 # Add the /auth command to authorize a user
 def auth(update: Update, context: CallbackContext):
+def auth(update: Update, context: CallbackContext):
     user = update.effective_user
     chat_id = update.effective_chat.id
     reply_message = update.message.reply_to_message
@@ -326,8 +327,10 @@ def auth(update: Update, context: CallbackContext):
     if reply_message:
         user_to_auth = reply_message.from_user
     elif username:
+        # Try to resolve the username to a user_id
         try:
-            user_to_auth = context.bot.get_chat(username)
+            # Get chat member details using the username
+            user_to_auth = context.bot.get_chat_member(chat_id=chat_id, user_id=username)
         except Exception as e:
             update.message.reply_text(f"Failed to find user {username}: {e}")
             return
