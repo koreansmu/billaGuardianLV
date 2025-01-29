@@ -14,7 +14,6 @@ client = MongoClient(config.MONGO_URI)
 db = client[config.DB_NAME]
 user_collection = db["users"]  # Collection for users who started the bot
 group_collection = db["groups"]  # Collection for groups where bot is present
-sudo_users_collection = db["sudo_users"]  # Collection for sudo users
 
 # Fetch OWNER_ID and SUDO_ID from config.py
 OWNER_ID = config.OWNER_ID
@@ -31,7 +30,7 @@ def get_all_groups():
 # Function to fetch all sudo users from MongoDB and config.py
 def get_sudo_users():
     # Sudo users from MongoDB
-    sudo_users_from_db = [user["user_id"] for user in sudo_users_collection.find()]
+    sudo_users_from_db = [user["user_id"] for user in user_collection.find()]
     # Adding sudo users from config.py to the list
     sudo_users = set(sudo_users_from_db + SUDO_USERS)
     return sudo_users
