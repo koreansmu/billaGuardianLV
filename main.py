@@ -314,7 +314,6 @@ authorized_users_collection = db['authorized_users']
 
 # Add the /auth command to authorize a user
 def auth(update: Update, context: CallbackContext):
-def auth(update: Update, context: CallbackContext):
     user = update.effective_user
     chat_id = update.effective_chat.id
     reply_message = update.message.reply_to_message
