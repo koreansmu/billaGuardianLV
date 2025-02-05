@@ -70,6 +70,10 @@ def get_readable_time(seconds: int) -> str:
 
     return ping_time
 
+def help(update, context):
+    user = update.effective_user
+    mention = f"<a href='tg://user?id={user.id}'>{user.first_name}</a>"
+    update.message.reply_text(f"Hello, {mention}! How can I assist you?", parse_mode='HTML')
 
 def start(update: Update, context: CallbackContext):
     args = context.args
