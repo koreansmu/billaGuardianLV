@@ -68,9 +68,7 @@ def get_readable_time(seconds: int) -> str:
     ping_time += ":".join(time_list)
 
     return ping_time
-def help(update: Update, context: CallbackContext):
-    user = update.effective_user
-    mention = f"<a href='tg://user?id={user.id}'>{user.first_name}</a>"
+
 
 def start(update: Update, context: CallbackContext):
     args = context.args
