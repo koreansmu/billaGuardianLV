@@ -8,10 +8,6 @@ import pymongo
 from random import choice
 from interstellar import *
 from telegram import Update, Bot
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pymongo import MongoClient
 from broadcast import broadcast_command, reply_broadcast_command
 from pymongo.errors import DuplicateKeyError
