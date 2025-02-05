@@ -10,7 +10,7 @@ from interstellar import *
 from telegram import Update, Bot
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
+from pyrogram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from pymongo import MongoClient
 from broadcast import broadcast_command, reply_broadcast_command
