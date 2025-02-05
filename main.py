@@ -8,7 +8,7 @@ import pymongo
 from random import choice
 from interstellar import *
 from telegram import Update, Bot
-​from​ ​pyrogram​ ​import​ ​Client​, Filters
+​from pyrogram import Client, Filters
 ​from​ ​pyrogram​.​types​ ​import​ ​Message
 ​from​ ​telegram​.​utils​.​helpers​ ​import​ ​mention_markdown
 ​from​ ​telegram​ ​import​ ​InlineKeyboardMarkup​, ​InlineKeyboardButton​, ​ParseMode
