@@ -563,7 +563,17 @@ def get_id(update: Update, context: CallbackContext):
     message = update.effective_message
     chat = update.effective_chat
     msg = update.effective_message
-    user_id = extract_user(msg, args)
+
+    # Attempt to extract user ID from args (if available)
+    user_id = None
+    if len(args) >= 1:
+        try:
+            user_id = int(args[0])
+        except ValueError:
+            user_id = None  # In case the provided arg is not a valid ID
+    # If no valid user ID found in args, check if it's a reply message
+    if not user_id and msg.reply_to_message:
+        user_id = msg.reply_to_message.from_user.id
 
     if user_id:
         if msg.reply_to_message and msg.reply_to_message.forward_from:
@@ -576,20 +586,17 @@ def get_id(update: Update, context: CallbackContext):
                 f"• {html.escape(user1.first_name)} - <code>{user1.id}</code>.",
                 parse_mode=ParseMode.HTML,
             )
-
         else:
             user = bot.get_chat(user_id)
             msg.reply_text(
                 f"{html.escape(user.first_name)}'s ɪᴅ ɪs <code>{user.id}</code>.",
                 parse_mode=ParseMode.HTML,
             )
-
     else:
         if chat.type == "private":
             msg.reply_text(
                 f"ʏᴏᴜʀ ᴜsᴇʀ ɪᴅ ɪs <code>{chat.id}</code>.", parse_mode=ParseMode.HTML
             )
-
         else:
             msg.reply_text(
                 f"ᴛʜɪs ɢʀᴏᴜᴩ's ɪᴅ ɪs <code>{chat.id}</code>.", parse_mode=ParseMode.HTML
