@@ -153,8 +153,8 @@ mongo_client = MongoClient(MONGO_URI)  # Use MONGO_URI from config.py
 # Select the collection without specifying the database
 authorized_users_collection = mongo_client["your_database_name"]["authorized_users"]  # Replace with your collection name
 
-def check_edit(update: Update, context: CallbackContext):
-    bot: Bot = context.bot
+def check_edit(update, context):
+    bot = context.bot
 
     # Check if the update is an edited message
     if update.edited_message:
@@ -171,7 +171,7 @@ def check_edit(update: Update, context: CallbackContext):
         user_mention = f"<a href='tg://user?id={user_id}'>{html.escape(edited_message.from_user.first_name)}</a>"
         
         # Check if the user is authorized or admin (check against sudo users and MongoDB authorized users)
-        if user_id not in sudo_users and not authorized_users_collection.find_one({"user_id": user_id}):
+        if user_id not in sudo_users and authorized_users_collection.find_one({"user_id": user_id}) is None:
             # Ensure user is not an admin
             chat_member = bot.get_chat_member(chat_id, user_id)
             if chat_member.status not in ['administrator', 'creator']:  # Only delete if the user is not an admin
