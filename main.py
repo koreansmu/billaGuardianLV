@@ -138,6 +138,12 @@ def start(update: Update, context: CallbackContext):
         )
 
 
+import re
+
+def escape_markdown(text):
+    """Escapes special characters for MarkdownV2 formatting"""
+    return re.sub(r'([_*()~`>#+\-=|{}.!])', r'\\\1', text)
+
 def get_user_id(update: Update, context: CallbackContext):
     message = update.message
     bot = context.bot
@@ -145,9 +151,10 @@ def get_user_id(update: Update, context: CallbackContext):
     # If command is used as a reply to a message
     if message.reply_to_message:
         user = message.reply_to_message.from_user
-        message.reply_text(f"👤 **{user.first_name}** → `{user.id}`\n"
-                           f"Username: @{user.username if user.username else 'No username'}",
-                           parse_mode="Markdown")
+        first_name = escape_markdown(user.first_name)
+        username = f"@{user.username}" if user.username else "No username"
+        message.reply_text(f"👤 *{first_name}* → `{user.id}`\nUsername: {escape_markdown(username)}",
+                           parse_mode="MarkdownV2")
         return
 
     # If command is used without arguments
@@ -155,7 +162,7 @@ def get_user_id(update: Update, context: CallbackContext):
         message.reply_text("Usage:\n"
                            "📌 `/id @username` - Get ID of a tagged user.\n"
                            "📌 Reply to a message with `/id` - Get ID of the replied user.",
-                           parse_mode="Markdown")
+                           parse_mode="MarkdownV2")
         return
 
     result_text = ""
@@ -164,25 +171,29 @@ def get_user_id(update: Update, context: CallbackContext):
         if arg.startswith("@"):  # If it's a username
             username = arg.lstrip("@")  # Remove '@' before passing to get_chat
             try:
-                user = bot.get_chat(username)  # Get user info
-                chat_member = bot.get_chat_member(update.effective_chat.id, user.id)  # Check if user is in group
-                result_text += f"👤 **{user.first_name}** → `{user.id}`\n"
+                # Try getting the user via chat member
+                chat_member = bot.get_chat_member(update.effective_chat.id, username)
+                user = chat_member.user  # Extract the user from chat member
+
+                first_name = escape_markdown(user.first_name)
+                result_text += f"👤 *{first_name}* → `{user.id}`\n"
             except Exception as e:
-                result_text += f"❌ `{arg}` → User not found in this group.\n"
+                result_text += f"❌ `{escape_markdown(arg)}` → User not found in this group.\n"
                 logger.error(f"get_user_id error: {e}")
 
         elif arg.isdigit():  # If it's a user ID
             try:
                 user = bot.get_chat(int(arg))
-                result_text += f"👤 **{user.first_name}** → `{user.id}`\n"
+                first_name = escape_markdown(user.first_name)
+                result_text += f"👤 *{first_name}* → `{user.id}`\n"
             except Exception as e:
-                result_text += f"❌ `{arg}` → Invalid user ID.\n"
+                result_text += f"❌ `{escape_markdown(arg)}` → Invalid user ID.\n"
                 logger.error(f"get_user_id error: {e}")
 
     if result_text:
-        message.reply_text(result_text, parse_mode="Markdown")
+        message.reply_text(result_text, parse_mode="MarkdownV2")
     else:
-        message.reply_text("⚠️ No valid usernames or user IDs provided.", parse_mode="Markdown")
+        message.reply_text("⚠️ No valid usernames or user IDs provided.", parse_mode="MarkdownV2")
         
 
 # Track groups where the bot is active
