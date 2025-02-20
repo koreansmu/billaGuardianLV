@@ -607,49 +607,49 @@ async def userid(client, message):
 
 # Function to send message to SUPPORT_ID group
 def main():
+    print("Starting bot...")  # Debug log
 
     if SUPPORT_ID is not None and isinstance(SUPPORT_ID, str):
         try:
-            dispatcher.bot.sendphoto(
-                f"{SUPPORT_ID}",
+            dispatcher.bot.send_photo(
+                chat_id=SUPPORT_ID,
                 photo=PM_START_IMG,               
-                caption=f"""
-ʜᴇʟʟᴏ ɪ ᴀᴍ sᴛᴀʀᴛᴇᴅ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ𝘀 ! ɪ"ᴍ ᴅᴇᴠʟᴏᴘᴇᴅ ʙʏ @ifeelraam""",
+                caption="ʜᴇʟʟᴏ, ɪ'ᴍ ᴏɴʟɪɴᴇ ᴀɴᴅ ʀᴇᴀᴅʏ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴍᴇssᴀɢᴇs!",
                 parse_mode=ParseMode.MARKDOWN,
             )
         except Unauthorized:
-            LOGGER.warning(
-                f"ʙɪʟʟᴀ ɪsɴ'ᴛ aᴀʙʟᴇ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {SUPPORT_ID}, ɢᴏ ᴀɴᴅ ᴄʜᴇᴄᴋ!"
-            )
+            LOGGER.warning(f"ʙɪʟʟᴀ ᴄᴀɴ'ᴛ sᴇɴᴅ ᴍᴇssᴀɢᴇs ᴛᴏ {SUPPORT_ID}, ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋ!")
         except BadRequest as e:
             LOGGER.warning(e.message)    
-    # Create the Updater and pass it your bot's token
+
+    # Initialize Updater
     updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
 
-    # Register handlers
+    # Register command handlers (works in both groups & private chats)
     dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("help", help))
+    dispatcher.add_handler(CommandHandler("id", get_user_id, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("getid", get_id, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("addsudo", add_sudo, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("rmsudo", rmsudo, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("sudolist", sudo_list, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("activegroups", list_active_groups, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("clone", clone, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("auth", auth, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("unauth", unauth, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("stats", send_stats, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("broadcast", broadcast_command, filters=Filters.chat_type.groups))
+    dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command, filters=Filters.chat_type.groups))
+
+    # Register message handlers
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
     dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
-    dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
-    dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
-    dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
-    dispatcher.add_handler(CommandHandler("activegroups", list_active_groups))
-    dispatcher.add_handler(CommandHandler("clone", clone))
-    dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots))
-    dispatcher.add_handler(CommandHandler("auth", auth))
-    dispatcher.add_handler(CommandHandler("unauth", unauth))
-    dispatcher.add_handler(CommandHandler("stats", send_stats))
-    dispatcher.add_handler(CommandHandler("broadcast", broadcast_command))
-    dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command))
-    dispatcher.add_handler(CommandHandler("getid", get_id))
-    dispatcher.add_handler(CommandHandler("id", get_user_id))
-    dispatcher.add_handler(CommandHandler("help", help))
-   
-    # Start the Bot
+
+    print("Bot is running!")  # Debug log
     updater.start_polling()
     updater.idle()
 
 if __name__ == '__main__':
     main()
-    # Start the bot
