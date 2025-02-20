@@ -160,12 +160,13 @@ def get_user_id(update: Update, context: CallbackContext):
 
     for arg in context.args:
         if arg.startswith("@"):  # If it's a username
-            username = arg.lstrip("@")  # Remove '@' before passing to get_chat
+            username = arg.lstrip("@")  # Remove '@' before passing to get_chat_member
             try:
-                user = bot.get_chat(username)
+                chat_member = bot.get_chat_member(update.effective_chat.id, username)
+                user = chat_member.user
                 result_text += f"👤 **{user.first_name}** → `{user.id}`\n"
             except Exception as e:
-                result_text += f"❌ `{arg}` → User not found.\n"
+                result_text += f"❌ `{arg}` → User not found in this group.\n"
                 logger.error(f"get_user_id error: {e}")
 
         elif arg.isdigit():  # If it's a user ID
