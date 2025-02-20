@@ -142,7 +142,6 @@ def get_user_id(update: Update, context: CallbackContext):
     message = update.message
     bot = context.bot
 
-    # If command is used as a reply to a message
     if message.reply_to_message:
         user = message.reply_to_message.from_user
         message.reply_text(f"👤 **{user.first_name}** → `{user.id}`\n"
@@ -150,7 +149,6 @@ def get_user_id(update: Update, context: CallbackContext):
                            parse_mode="Markdown")
         return
 
-    # If command is used without arguments
     if not context.args:
         message.reply_text("Usage:\n"
                            "📌 `/id @username` - Get ID of a tagged user.\n"
@@ -162,8 +160,9 @@ def get_user_id(update: Update, context: CallbackContext):
 
     for arg in context.args:
         if arg.startswith("@"):  # If it's a username
+            username = arg.lstrip("@")  # Remove '@' before passing to get_chat
             try:
-                user = bot.get_chat(arg)  # Using get_chat() instead of get_chat_member()
+                user = bot.get_chat(username)
                 result_text += f"👤 **{user.first_name}** → `{user.id}`\n"
             except Exception as e:
                 result_text += f"❌ `{arg}` → User not found.\n"
