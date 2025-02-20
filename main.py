@@ -606,22 +606,27 @@ async def userid(client, message):
 
 # Function to send message to SUPPORT_ID group
 def main():
-    updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
-    dispatcher = updater.dispatcher
 
     if SUPPORT_ID is not None and isinstance(SUPPORT_ID, str):
         try:
-            dispatcher.bot.send_photo(
-                chat_id=SUPPORT_ID,
-                photo=PM_START_IMG,
-                caption="ʜᴇʟʟᴏ ɪ ᴀᴍ sᴛᴀʀᴛᴇᴅ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ𝘴 ! ɪ'ᴍ ᴅᴇᴠʟᴏᴘᴇᴅ ʙʏ @ifeelraam",
+            dispatcher.bot.sendphoto(
+                f"{SUPPORT_ID}",
+                photo=PM_START_IMG,               
+                caption=f"""
+ʜᴇʟʟᴏ ɪ ᴀᴍ sᴛᴀʀᴛᴇᴅ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ𝘀 ! ɪ"ᴍ ᴅᴇᴠʟᴏᴘᴇᴅ ʙʏ @ifeelraam""",
                 parse_mode=ParseMode.MARKDOWN,
             )
         except Unauthorized:
-            LOGGER.warning(f"ʙɪʟʟᴀ ɪsɴ'ᴛ ᴀʙʟᴇ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {SUPPORT_ID}, ɢᴏ ᴀɴᴅ ᴄʜᴇᴄᴋ!")
+            LOGGER.warning(
+                f"ʙɪʟʟᴀ ɪsɴ'ᴛ aᴀʙʟᴇ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {SUPPORT_ID}, ɢᴏ ᴀɴᴅ ᴄʜᴇᴄᴋ!"
+            )
         except BadRequest as e:
-            LOGGER.warning(e.message)
+            LOGGER.warning(e.message)    
+    # Create the Updater and pass it your bot's token
+    updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
 
+    # Register handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
     dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
@@ -639,10 +644,11 @@ def main():
     dispatcher.add_handler(CommandHandler("getid", get_id))
     dispatcher.add_handler(CommandHandler("id", get_user_id))
     dispatcher.add_handler(CommandHandler("help", help))
-
+   
+    # Start the Bot
     updater.start_polling()
     updater.idle()
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
+    # Start the bot
