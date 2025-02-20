@@ -335,7 +335,7 @@ def auth(update: Update, context: CallbackContext):
     username = context.args[0] if len(context.args) > 0 else None
     
     if not username and not reply_message:
-        update.message.reply_text("Usage: /auth <@username> or reply to a message.")
+        update.message.reply_text("Usᴀɢᴇ: /auth <@ᴜsᴇʀɴᴀᴍᴇ> ᴏʀ ʀᴇᴘʟʏ ᴛᴏ ʜɪs/ʜᴇʀ ᴍᴇssᴀɢᴇ.")
         return
     
     if reply_message:
@@ -346,14 +346,14 @@ def auth(update: Update, context: CallbackContext):
             # Get chat member details using the username
             user_to_auth = context.bot.get_chat_member(chat_id=chat_id, user_id=username)
         except Exception as e:
-            update.message.reply_text(f"Failed to find user {username}: {e}")
+            update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ғɪɴᴅ ᴜsᴇʀ ᴛʜᴇʀᴇ {username}: {e}")
             return
 
     user_id = user_to_auth.id
 
     # Check if the user is already authorized
     if authorized_users_collection.find_one({"user_id": user_id}):
-        update.message.reply_text(f"{user_to_auth.first_name} is already authorized.")
+        update.message.reply_text(f"{user_to_auth.first_name} ɪs ᴀʟʀᴇᴀᴅʏ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ.")
         return
 
     # Add to the database
@@ -363,9 +363,9 @@ def auth(update: Update, context: CallbackContext):
             "username": user_to_auth.username,
             "first_name": user_to_auth.first_name
         })
-        update.message.reply_text(f"{user_to_auth.first_name} has been authorized.")
+        update.message.reply_text(f"{user_to_auth.first_name} ʜᴀs ʙᴇᴇɴ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ.")
     except DuplicateKeyError:
-        update.message.reply_text(f"{user_to_auth.first_name} is already in the database.")
+        update.message.reply_text(f"{user_to_auth.first_name} ɪs ᴀʟʀᴇᴀᴅʏ ɪɴ ʙɪʟʟᴀ's ᴍɪɴᴅ.")
 
 # Add the /unauth command to unauthorize a user
 def unauth(update: Update, context: CallbackContext):
@@ -375,7 +375,7 @@ def unauth(update: Update, context: CallbackContext):
     username = context.args[0] if len(context.args) > 0 else None
     
     if not username and not reply_message:
-        update.message.reply_text("Usage: /unauth <@username> or reply to a message.")
+        update.message.reply_text("Usᴀɢᴇ: /unauth <@ᴜsᴇʀɴᴀᴍᴇ> ᴏʀ ʀᴇᴘʟʏ ᴛᴏ ʜɪs/ʜᴇʀ ᴍᴇssᴀɢᴇ.")
         return
     
     if reply_message:
@@ -384,36 +384,36 @@ def unauth(update: Update, context: CallbackContext):
         try:
             user_to_unauth = context.bot.get_chat(username)
         except Exception as e:
-            update.message.reply_text(f"Failed to find user {username}: {e}")
+            update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ғɪɴᴅ ᴜsᴇʀ {username}: {e}")
             return
 
     user_id = user_to_unauth.id
 
     # Check if the user is authorized
     if not authorized_users_collection.find_one({"user_id": user_id}):
-        update.message.reply_text(f"{user_to_unauth.first_name} is not authorized.")
+        update.message.reply_text(f"{user_to_unauth.first_name} ɪs ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ.")
         return
 
     # Remove from the database
     authorized_users_collection.delete_one({"user_id": user_id})
-    update.message.reply_text(f"{user_to_unauth.first_name} has been unauthorized.")
+    update.message.reply_text(f"{user_to_unauth.first_name} ʜᴀs ʙᴇᴇɴ ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ.")
     
 def send_stats(update: Update, context: CallbackContext):
     user = update.effective_user
     
     if user.id != OWNER_ID:
-        update.message.reply_text("You are not authorized to use this command.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
     
     try:
         users_count = users_collection.count_documents({})
         chat_count = active_groups_collection.count_documents({})  # Use correct collection
         
-        stats_msg = f"Total Users: {users_count}\nTotal Groups: {chat_count}\n"
+        stats_msg = f"Tᴏᴛᴀʟ Usᴇʀs: {users_count}\nTᴏᴛᴀʟ Gʀᴏᴜᴘs: {chat_count}\n"
         update.message.reply_text(stats_msg)
     except Exception as e:
-        logger.error(f"Error in send_stats function: {e}")
-        update.message.reply_text("Failed to fetch statistics.")
+        logger.error(f"ᴇʀʀᴏʀ ɪɴ send_stats ғᴜɴᴄᴛɪᴏɴ: {e}")
+        update.message.reply_text("Fᴀɪʟᴇᴅ ᴛᴏ ғᴇᴛᴄʜ sᴛᴀs.")
  
 # MongoDB connection setup
 client = MongoClient("mongodb://localhost:27017/")
@@ -434,25 +434,25 @@ def fetch_active_groups_from_db():
         active_groups = list(active_groups_collection.find())
         return active_groups
     except ConnectionError as e:
-        print(f"Failed to connect to MongoDB: {e}")
+        print(f"ғᴀɪʟᴇᴅ ᴛᴏ ᴄᴏɴɴᴇᴄᴛ Dʙ: {e}")
         return None
 
 # Handler for /activegroups command
 def list_active_groups(update: Update, context: CallbackContext):
     if update.message.from_user.id != OWNER_ID:
-        update.message.reply_text("You don't have permission to use this command.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
 
     # Fetch active groups from MongoDB
     active_groups_from_db = fetch_active_groups_from_db()
 
     if not active_groups_from_db:
-        update.message.reply_text("The bot is not active in any groups or failed to connect to MongoDB.")
+        update.message.reply_text("ᴛʜᴇ ʙᴏᴛ ɪs ɴᴏᴛ ᴀᴄᴛɪᴠᴇ ɪɴ ᴀɴʏ ɢʀᴏᴜᴘs ᴏʀ ғᴀɪʟᴇᴅ ᴛᴏ ᴄᴏɴɴᴇᴄᴛ MᴏɴɢᴏDʙ.")
         return
 
-    group_list_msg = "Active groups where the bot is currently active:\n"
+    group_list_msg = "Aᴄᴛɪᴠᴇ ɢʀᴏᴜᴘs ᴡʜᴇʀᴇ ᴛʜᴇ ʙɪʟʟᴀ ᴇ-ɢ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴀᴄᴛɪᴠᴇ:\n"
     for group in active_groups_from_db:
-        if group["invite_link"] != "No invite link available":
+        if group["invite_link"] != "Nᴏ ɪɴᴠɪᴛᴇ ʟɪɴᴋ ᴀᴠᴀɪʟᴀʙʟᴇ":
             group_list_msg += f"- <a href='{group['invite_link']}'>[{group['group_name']}]</a>\n"
         else:
             group_list_msg += f"- {group['group_name']}\n"
