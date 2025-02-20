@@ -140,7 +140,7 @@ def get_user_id(update: Update, context: CallbackContext):
 
     username = context.args[0]
     if not username.startswith('@'):
-        update.message.reply_text("Please provide a valid username starting with '@'.")
+        update.message.reply_text("ᴘʟᴇᴀsᴡ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴠᴀʟɪᴅ ᴜsᴇʀɴᴀᴍᴇ sᴛᴀʀᴛɪɴɢ ᴡɪᴛʜ '@'.")
         return
     try:
         user = context.bot.get_chat(username)
@@ -192,7 +192,7 @@ def check_edit(update, context):
                 bot.delete_message(chat_id=chat_id, message_id=message_id)
                 
                 # Send a message notifying about the deletion
-                bot.send_message(chat_id=chat_id, text=f"{user_mention} Just edited a message, I have deleted their edited message.", parse_mode='HTML')
+                bot.send_message(chat_id=chat_id, text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ᴛʜᴇʀɪ ᴇᴅɪᴛɪᴇᴅ ᴍᴇssᴀɢᴇ.", parse_mode='HTML')
 
 # MongoDB collection for sudo users
 sudo_users_collection = db['sudo_users']
@@ -218,12 +218,12 @@ def add_sudo(update: Update, context: CallbackContext):
         sudo_user_obj = context.bot.get_chat_member(chat_id=chat_id, user_id=sudo_user)
         sudo_user_id = sudo_user_obj.user.id
     except Exception as e:
-        update.message.reply_text(f"Failed to resolve user: {e}")
+        update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ʀᴇsᴏʟᴠᴇ ᴜsᴇʀ: {e}")
         return
     
     # Add sudo user ID to the database if not already present
     if sudo_users_collection.find_one({"user_id": sudo_user_id}):
-        update.message.reply_text(f"{sudo_user_obj.user.username} is already a sudo user.")
+        update.message.reply_text(f"{sudo_user_obj.user.username} ɪs ᴀʟʀᴇᴀᴅʏ ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
         return
     
     # Add sudo user to the database
@@ -233,9 +233,9 @@ def add_sudo(update: Update, context: CallbackContext):
             "username": sudo_user_obj.user.username,
             "first_name": sudo_user_obj.user.first_name
         })
-        update.message.reply_text(f"Added {sudo_user_obj.user.username} as a sudo user.")
+        update.message.reply_text(f"ᴀᴅᴅᴇᴅ {sudo_user_obj.user.username} ᴀs ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
     except Exception as e:
-        update.message.reply_text(f"Failed to add sudo user: {e}")
+        update.message.reply_text(f"Fᴀɪʟᴇᴅ ʏᴏ ᴀᴅᴅ sᴜᴘᴇʀ ᴜsᴇʀ: {e}")
 
 # Add the /rmsudo command to remove a sudo user
 def rmsudo(update: Update, context: CallbackContext):
