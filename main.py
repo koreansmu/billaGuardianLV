@@ -155,7 +155,7 @@ def track_groups(update: Update, context: CallbackContext):
     chat = update.effective_chat
 
     if chat.type in ["group", "supergroup"]:
-        group_data = {"group_id": chat.id, "group_name": chat.title}
+        group_data = {"group_id": chat.id, "group_name": chat.title, "invite_link": "No invite link available"}
 
         if not active_groups_collection.find_one({"group_id": chat.id}):
             active_groups_collection.insert_one(group_data)
@@ -414,50 +414,38 @@ def send_stats(update: Update, context: CallbackContext):
     except Exception as e:
         logger.error(f"ᴇʀʀᴏʀ ɪɴ send_stats ғᴜɴᴄᴛɪᴏɴ: {e}")
         update.message.reply_text("Fᴀɪʟᴇᴅ ᴛᴏ ғᴇᴛᴄʜ sᴛᴀs.")
- 
-# MongoDB connection setup
-client = MongoClient("mongodb://localhost:27017/")
-db = client["your_database_name"]
-active_groups_collection = db["active_groups"]
-
-# Placeholder for tracked groups
-list_groups = []  # To store all groups
-active_groups = []  # To store only active groups
 
 
 def fetch_active_groups_from_db():
     try:
-        # Replace with your MongoDB URI if necessary
-        client = pymongo.MongoClient("mongodb://localhost:27017")
-        db = client['your_database_name']  # Replace with your database name
-        active_groups_collection = db['active_groups']  # Replace with your collection name
-        active_groups = list(active_groups_collection.find())
+        active_groups = list(active_groups_collection.find({}, {"group_id": 1, "group_name": 1, "invite_link": 1, "_id": 0}))
         return active_groups
-    except ConnectionError as e:
-        print(f"ғᴀɪʟᴇᴅ ᴛᴏ ᴄᴏɴɴᴇᴄᴛ Dʙ: {e}")
+    except Exception as e:
+        print(f"Fᴀɪʟᴇᴅ ᴛᴏ ᴄᴏɴɴᴇᴄᴛ ᴛᴏ MᴏɴɢᴏDB: {e}")
         return None
 
 # Handler for /activegroups command
 def list_active_groups(update: Update, context: CallbackContext):
     if update.message.from_user.id != OWNER_ID:
-        update.message.reply_text("Yᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
+        update.message.reply_text("You don't have permission to use this command.")
         return
 
-    # Fetch active groups from MongoDB
     active_groups_from_db = fetch_active_groups_from_db()
 
     if not active_groups_from_db:
-        update.message.reply_text("ᴛʜᴇ ʙᴏᴛ ɪs ɴᴏᴛ ᴀᴄᴛɪᴠᴇ ɪɴ ᴀɴʏ ɢʀᴏᴜᴘs ᴏʀ ғᴀɪʟᴇᴅ ᴛᴏ ᴄᴏɴɴᴇᴄᴛ MᴏɴɢᴏDʙ.")
+        update.message.reply_text("Tʜᴇ ʙɪʟʟᴀ ᴇɢ ɪs ɴᴏᴛ ᴀᴄᴛɪᴠᴇ ɪɴ ᴀɴʏ ɢʀᴏᴜᴘs ᴏʀ ғᴀɪʟᴇᴅ ᴛᴏ ᴄᴏᴍɴᴇᴄᴛ ᴛᴏ MᴏɴɢᴏDB.")
         return
 
-    group_list_msg = "Aᴄᴛɪᴠᴇ ɢʀᴏᴜᴘs ᴡʜᴇʀᴇ ᴛʜᴇ ʙɪʟʟᴀ ᴇ-ɢ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴀᴄᴛɪᴠᴇ:\n"
+    group_list_msg = "Aᴄᴛɪᴠᴇ ɢʀᴏᴜᴘ ᴡʜᴇʀᴇ ᴛʜᴇ ʙɪʟʟᴀ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴀᴄᴛɪᴠᴇ:\n"
     for group in active_groups_from_db:
-        if group["invite_link"] != "Nᴏ ɪɴᴠɪᴛᴇ ʟɪɴᴋ ᴀᴠᴀɪʟᴀʙʟᴇ":
-            group_list_msg += f"- <a href='{group['invite_link']}'>[{group['group_name']}]</a>\n"
-        else:
-            group_list_msg += f"- {group['group_name']}\n"
+        group_name = group.get("group_name", "Unknown Group")
+        invite_link = group.get("invite_link", "Nᴏ ɪɴᴠɪᴛᴀᴛɪᴏɴ ᴀᴠᴀɪʟᴀʙʟᴅ")
 
-    # Send the list of active groups
+        if invite_link != "ɪɴᴠɪᴛᴀᴛᴀᴛɪᴏɴ ᴀᴠᴀɪʟᴀʙʟᴇ":
+            group_list_msg += f"- <a href='{invite_link}'>[{group_name}]</a>\n"
+        else:
+            group_list_msg += f"- {group_name}\n"
+
     update.message.reply_text(group_list_msg, parse_mode="HTML")
 
 # Global list to store active cloned bots
@@ -511,20 +499,20 @@ def clone(update: Update, context: CallbackContext):
         )
 
     except Exception as e:
-        update.message.reply_text(f"𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗰𝗹𝗼𝗻𝗲 𝘁𝗵𝗲 𝗯𝗼𝘁: {e}")
+        update.message.reply_text(f"ғᴀɪʟᴇᴅ ᴛᴏ ᴄʟᴏɴᴇ ᴛʜᴇ ʙᴏᴛ: {e}")
 
 # Command to list active cloned bots
 def list_active_cloned_bots(update: Update, context: CallbackContext):
     if update.effective_user.id != OWNER_ID:
-        update.message.reply_text("You don't have permission to use this command.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
 
     # Generate a list of active cloned bots
     if not active_cloned_bots:
-        update.message.reply_text("No cloned bots are active at the moment.")
+        update.message.reply_text("Nᴏ ᴄʟᴏɴᴇs ᴀʀᴇ ᴀᴄᴛɪᴠᴇ ᴀᴛ ᴛʜᴇ ᴍᴏᴍᴇɴᴛ.")
         return
 
-    active_bots_msg = "Active Cloned Bots:\n"
+    active_bots_msg = "Aᴄᴛɪᴠᴇ Cʟᴏɴᴇᴅ Bɪʟʟᴀ:\n"
     for bot in active_cloned_bots:
         active_bots_msg += f"- @{bot['bot_username']}\n"
 
@@ -594,7 +582,7 @@ async def userid(client, message):
             user_id = (await client.get_users(split)).id
             text += f"**User ID:** `{user_id}`\n"
         except Exception:
-            return await eor(message, text="This user doesn't exist.")
+            return await eor(message, text="Tʜɪs ᴜsᴇʀ ᴅᴏᴇsɴ'ᴛ ᴇxɪsᴛᴀ ᴛʜᴇʀᴇ.")
 
     text += f"**Chat ID:** `{chat.id}`\n\n"
     if not getattr(reply, "empty", True):
@@ -627,7 +615,7 @@ def main():
             )
         except Unauthorized:
             LOGGER.warning(
-                f"Bot isn't able to send message to {SUPPORT_ID}, go and check!"
+                f"ʙɪʟʟᴀ ɪsɴ'ᴛ aᴀʙʟᴇ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {SUPPORT_ID}, ɢᴏ ᴀɴᴅ ᴄʜᴇᴄᴋ!"
             )
         except BadRequest as e:
             LOGGER.warning(e.message)    
