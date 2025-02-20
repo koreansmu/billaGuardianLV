@@ -138,11 +138,11 @@ def start(update: Update, context: CallbackContext):
         )
 
 
-import re
 
 def escape_markdown(text):
     """Escapes special characters for MarkdownV2 formatting"""
-    return re.sub(r'([_*()~`>#+\-=|{}.!])', r'\\\1', text)
+    escape_chars = r'[_*()~`>#+\-=|{}.!]'
+    return re.sub(f'({escape_chars})', r'\\\1', text)
 
 def get_user_id(update: Update, context: CallbackContext):
     message = update.message
