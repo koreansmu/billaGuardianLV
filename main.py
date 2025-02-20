@@ -614,7 +614,7 @@ def main():
             dispatcher.bot.send_photo(
                 chat_id=SUPPORT_ID,
                 photo=PM_START_IMG,
-                caption="ʜᴇʟʟᴏ ɪ ᴀᴍ sᴛᴀʀᴛᴇᴅ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ𝘴 ! ɪ'ᴍ ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ @ifeelraam",
+                caption="ʜᴇʟʟᴏ ɪ ᴀᴍ sᴛᴀʀᴛᴇᴅ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ𝘴 ! ɪ'ᴍ ᴅᴇᴠʟᴏᴘᴇᴅ ʙʏ @ifeelraam",
                 parse_mode=ParseMode.MARKDOWN,
             )
         except Unauthorized:
@@ -622,31 +622,27 @@ def main():
         except BadRequest as e:
             LOGGER.warning(e.message)
 
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
+    dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
+    dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
+    dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
+    dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
+    dispatcher.add_handler(CommandHandler("activegroups", list_active_groups))
+    dispatcher.add_handler(CommandHandler("clone", clone))
+    dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots))
+    dispatcher.add_handler(CommandHandler("auth", auth))
+    dispatcher.add_handler(CommandHandler("unauth", unauth))
+    dispatcher.add_handler(CommandHandler("stats", send_stats))
+    dispatcher.add_handler(CommandHandler("broadcast", broadcast_command))
+    dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command))
+    dispatcher.add_handler(CommandHandler("getid", get_id))
+    dispatcher.add_handler(CommandHandler("id", get_user_id))
+    dispatcher.add_handler(CommandHandler("help", help))
 
-    # Register handlers
-dispatcher.add_handler(CommandHandler("start", start))
-dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
-dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
-dispatcher.add_handler(CommandHandler("addsudo", add_sudo, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("rmsudo", rmsudo, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("sudolist", sudo_list, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("auth", auth, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("unauth", unauth, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("broadcast", broadcast_command, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("stats", send_stats, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("activegroups", list_active_groups, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("clone", clone))
-dispatcher.add_handler(CommandHandler("getid", get_id, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("id", get_user_id, filters=Filters.chat_type.groups | Filters.chat_type.private))
-dispatcher.add_handler(CommandHandler("help", help, filters=Filters.chat_type.groups | Filters.chat_type.private))
-   
-    # Start the Bot
     updater.start_polling()
     updater.idle()
 
 
 if __name__ == "__main__":
     main()
-    # Start the bot
