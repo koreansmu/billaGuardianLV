@@ -74,7 +74,7 @@ def get_readable_time(seconds: int) -> str:
 def help(update, context):
     user = update.effective_user
     mention = f"<a href='tg://user?id={user.id}'>{user.first_name}</a>"
-    update.message.reply_text(f"Hello, {mention}! How can I assist you?", parse_mode='HTML')
+    update.message.reply_text(f"ʙᴜᴅᴅʏ, {mention}! ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋᴏᴜᴛ sᴜᴘᴘᴏʀᴛ ɢʀᴜᴘ ɴᴏᴡ", parse_mode='HTML')
 
 # Track users when they start the bot
 def start(update: Update, context: CallbackContext):
@@ -475,7 +475,7 @@ def clone(update: Update, context: CallbackContext):
 
     # Get the bot token from the command
     if len(context.args) != 1:
-        update.message.reply_text("𝗨𝘀𝗮𝗴𝗲: /clone <Your Bot Token>")
+        update.message.reply_text("𝗨𝘀𝗮𝗴𝗲: /clone <ʏᴏᴜʀ ʙᴏᴛ ᴛᴏᴋᴇɴ (ᴄᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇ)>")
         return
 
     new_bot_token = context.args[0]
@@ -651,7 +651,9 @@ def main():
     dispatcher.add_handler(CommandHandler("broadcast", broadcast_command))
     dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command))
     dispatcher.add_handler(CommandHandler("getid", get_id))
-    
+    dispatcher.add_handler(CommandHandler("id", get_user_id))
+    dispatcher.add_handler(CommandHandler("help", help))
+   
     # Start the Bot
     updater.start_polling()
     updater.idle()
