@@ -145,14 +145,15 @@ def get_user_id(update: Update, context: CallbackContext):
 
     username = context.args[0]
     if not username.startswith('@'):
-        update.message.reply_text("ᴘʟᴇᴀsᴡ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴠᴀʟɪᴅ ᴜsᴇʀɴᴀᴍᴇ sᴛᴀʀᴛɪɴɢ ᴡɪᴛʜ '@'.")
+        update.message.reply_text("ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴠᴀʟɪᴅ ᴜsᴇʀɴᴀᴍᴇ sᴛᴀʀᴛɪɴɢ ᴡɪᴛʜ '@'.")
         return
+
     try:
         user = context.bot.get_chat(username)
         user_id = user.id
         update.message.reply_text(f"Usᴇʀ Iᴅ ᴏғ {username} ɪs {user_id}.")
     except Exception as e:
-        update.message.reply_text(f"ғᴀɪʟᴅᴇ ᴛᴏ ɢᴇᴛ ᴜsᴇʀ Iᴅ: {e}")
+        update.message.reply_text(f"ғᴀɪʟᴇᴅ ᴛᴏ ɢᴇᴛ ᴜsᴇʀ Iᴅ: {e}")
         logger.error(f"get_user_id error: {e}")
 
 # Track groups where the bot is active
