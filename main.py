@@ -76,14 +76,17 @@ def help(update, context):
     mention = f"<a href='tg://user?id={user.id}'>{user.first_name}</a>"
     update.message.reply_text(f"Hello, {mention}! How can I assist you?", parse_mode='HTML')
 
+# Track users when they start the bot
 def start(update: Update, context: CallbackContext):
-    args = context.args
-    uptime = get_readable_time((time.time() - StartTime))
+    user = update.effective_user
+    user_data = {"user_id": user.id, "first_name": user.first_name}
 
-    user_id = update.effective_user.id
-    chat_id = update.effective_chat.id
-   
-    
+    # Insert user into MongoDB if they are not already stored
+    if not users_collection.find_one({"user_id": user.id}):
+        users_collection.insert_one(user_data)
+
+    update.message.reply_text("ʜᴏʟᴀ ᴀᴍɪɢᴏ!ᴋᴀɪsᴇ ʜᴏ ᴛʜɪᴋ ʜᴏ?,ʙɪʟʟᴀ ɪs ᴀᴄᴛɪᴠᴇ.")
+
     if update.effective_chat.type == "private":
         if len(args) >= 1:
             if args[0].lower() == "help":
@@ -142,10 +145,20 @@ def get_user_id(update: Update, context: CallbackContext):
     try:
         user = context.bot.get_chat(username)
         user_id = user.id
-        update.message.reply_text(f"User ID of {username} is {user_id}.")
+        update.message.reply_text(f"Usᴇʀ Iᴅ ᴏғ {username} is {user_id}.")
     except Exception as e:
-        update.message.reply_text(f"Failed to get user ID: {e}")
+        update.message.reply_text(f"ғᴀɪʟᴅᴇ ᴛᴏ ɢᴇᴛ ᴜsᴇʀ Iᴅ: {e}")
         logger.error(f"get_user_id error: {e}")
+
+# Track groups where the bot is active
+def track_groups(update: Update, context: CallbackContext):
+    chat = update.effective_chat
+
+    if chat.type in ["group", "supergroup"]:
+        group_data = {"group_id": chat.id, "group_name": chat.title}
+
+        if not active_groups_collection.find_one({"group_id": chat.id}):
+            active_groups_collection.insert_one(group_data)
 
 # Establish a MongoDB client connection using MONGO_URI
 mongo_client = MongoClient(MONGO_URI)  # Use MONGO_URI from config.py
@@ -385,28 +398,19 @@ def unauth(update: Update, context: CallbackContext):
     authorized_users_collection.delete_one({"user_id": user_id})
     update.message.reply_text(f"{user_to_unauth.first_name} has been unauthorized.")
     
-# Register the sudo_list command hand
 def send_stats(update: Update, context: CallbackContext):
     user = update.effective_user
     
-    # Check if the user is the owner
     if user.id != OWNER_ID:
         update.message.reply_text("You are not authorized to use this command.")
         return
     
     try:
-        # Fetch all users who have interacted with the bot
         users_count = users_collection.count_documents({})
+        chat_count = active_groups_collection.count_documents({})  # Use correct collection
         
-        # Fetch all unique chat IDs the bot is currently in
-        chat_count = chats_collection.count_documents({})
-        
-        # Prepare the response message
-        stats_msg = f"Total Users: {users_count}\n"
-        stats_msg += f"Total Chats: {chat_count}\n"
-        
+        stats_msg = f"Total Users: {users_count}\nTotal Groups: {chat_count}\n"
         update.message.reply_text(stats_msg)
-        
     except Exception as e:
         logger.error(f"Error in send_stats function: {e}")
         update.message.reply_text("Failed to fetch statistics.")
@@ -526,37 +530,6 @@ def list_active_cloned_bots(update: Update, context: CallbackContext):
 
     update.message.reply_text(active_bots_msg)
 
-# Kick cloned bot command
-def kick_clone(update: Update, context: CallbackContext):
-    user = update.effective_user
-    chat_id = update.effective_chat.id
-
-    # Check if the user is the owner
-    if user.id != OWNER_ID:
-        update.message.reply_text("ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴍᴅ.")
-        return
-
-    # Ensure that a bot token is provided
-    if len(context.args) != 1:
-        update.message.reply_text("𝗨𝘀𝗮𝗴𝗲: /kickclone <Your Bot Token>")
-        return
-
-    clone_bot_token = context.args[0]
-
-    try:
-        # Create a Bot instance using the cloned bot's token
-        cloned_bot = Bot(token=clone_bot_token)
-        
-        # Get the cloned bot's information
-        cloned_bot_info = cloned_bot.get_me()
-
-        # Logout the cloned bot to stop its activities
-        cloned_bot.logout()
-
-        update.message.reply_text(f"ʙᴏᴛ {cloned_bot_info.username} ({cloned_bot_info.id}) ʜᴀs ʙᴇᴇɴ ʟᴏɢɢᴇᴅ ᴏᴜᴛ.")
-    except Exception as e:
-        update.message.reply_text(f"𝗙𝗮𝗶𝗹𝗲𝗱 𝘁𝗼 𝗿𝗲𝗺𝗼𝘃𝗲 𝘁𝗵𝗲 𝗯𝗼𝘁: {e}")
-
 # Command handler for /getid
 def get_id(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
@@ -665,12 +638,12 @@ def main():
     # Register handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
+    dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list))
     dispatcher.add_handler(CommandHandler("activegroups", list_active_groups))
     dispatcher.add_handler(CommandHandler("clone", clone))
-    dispatcher.add_handler(CommandHandler("kickclone", kick_clone))
     dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots))
     dispatcher.add_handler(CommandHandler("auth", auth))
     dispatcher.add_handler(CommandHandler("unauth", unauth))
