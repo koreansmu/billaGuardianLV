@@ -139,22 +139,39 @@ def start(update: Update, context: CallbackContext):
 
 
 def get_user_id(update: Update, context: CallbackContext):
-    if len(context.args) != 1:
-        update.message.reply_text("Usᴀɢᴇ: /id <ᴜsᴇʀɴᴀᴍᴇ>")
+    message = update.message
+    bot = context.bot
+
+    # Ensure command is used with an argument
+    if not context.args:
+        message.reply_text("Usage: `/id @username` or `/id <user_id>`.\nYou can also tag multiple users.",
+                           parse_mode="Markdown")
         return
 
-    username = context.args[0]
-    if not username.startswith('@'):
-        update.message.reply_text("ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴠᴀʟɪᴅ ᴜsᴇʀɴᴀᴍᴇ sᴛᴀʀᴛɪɴɢ ᴡɪᴛʜ '@'.")
-        return
+    result_text = ""
 
-    try:
-        user = context.bot.get_chat(username)
-        user_id = user.id
-        update.message.reply_text(f"Usᴇʀ Iᴅ ᴏғ {username} ɪs {user_id}.")
-    except Exception as e:
-        update.message.reply_text(f"ғᴀɪʟᴇᴅ ᴛᴏ ɢᴇᴛ ᴜsᴇʀ Iᴅ: {e}")
-        logger.error(f"get_user_id error: {e}")
+    for arg in context.args:
+        if arg.startswith("@"):  # If it's a username
+            try:
+                user = bot.get_chat(arg)
+                result_text += f"👤 `{user.first_name}` → `{user.id}`\n"
+            except Exception as e:
+                result_text += f"❌ `{arg}` → User not found.\n"
+                logger.error(f"get_user_id error: {e}")
+
+        elif arg.isdigit():  # If it's a user ID
+            try:
+                user = bot.get_chat(int(arg))
+                result_text += f"👤 `{user.first_name}` → `{user.id}`\n"
+            except Exception as e:
+                result_text += f"❌ `{arg}` → Invalid user ID.\n"
+                logger.error(f"get_user_id error: {e}")
+
+    if result_text:
+        message.reply_text(result_text, parse_mode="Markdown")
+    else:
+        message.reply_text("⚠️ No valid usernames or user IDs provided.", parse_mode="Markdown")
+        
 
 # Track groups where the bot is active
 def track_groups(update: Update, context: CallbackContext):
