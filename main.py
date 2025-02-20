@@ -140,11 +140,22 @@ def start(update: Update, context: CallbackContext):
 
 def get_user_id(update: Update, context: CallbackContext):
     message = update.message
+    chat = update.effective_chat
     bot = context.bot
 
-    # Ensure command is used with an argument
+    # If command is used as a reply to a message
+    if message.reply_to_message:
+        user = message.reply_to_message.from_user
+        message.reply_text(f"👤 **{user.first_name}** → `{user.id}`\n"
+                           f"Username: @{user.username if user.username else 'No username'}",
+                           parse_mode="Markdown")
+        return
+
+    # If command is used with arguments (username or user ID)
     if not context.args:
-        message.reply_text("Usage: `/id @username` or `/id <user_id>`.\nYou can also tag multiple users.",
+        message.reply_text("Usage:\n"
+                           "📌 `/id @username` - Get ID of a tagged user.\n"
+                           "📌 Reply to a message with `/id` - Get ID of the replied user.",
                            parse_mode="Markdown")
         return
 
@@ -153,16 +164,17 @@ def get_user_id(update: Update, context: CallbackContext):
     for arg in context.args:
         if arg.startswith("@"):  # If it's a username
             try:
-                user = bot.get_chat(arg)
-                result_text += f"👤 `{user.first_name}` → `{user.id}`\n"
+                # Use get_chat_member() instead of get_chat() for group users
+                user = bot.get_chat_member(chat.id, arg).user
+                result_text += f"👤 **{user.first_name}** → `{user.id}`\n"
             except Exception as e:
-                result_text += f"❌ `{arg}` → User not found.\n"
+                result_text += f"❌ `{arg}` → User not found in this group.\n"
                 logger.error(f"get_user_id error: {e}")
 
         elif arg.isdigit():  # If it's a user ID
             try:
                 user = bot.get_chat(int(arg))
-                result_text += f"👤 `{user.first_name}` → `{user.id}`\n"
+                result_text += f"👤 **{user.first_name}** → `{user.id}`\n"
             except Exception as e:
                 result_text += f"❌ `{arg}` → Invalid user ID.\n"
                 logger.error(f"get_user_id error: {e}")
