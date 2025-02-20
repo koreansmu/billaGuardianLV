@@ -135,7 +135,7 @@ def start(update: Update, context: CallbackContext):
 
 def get_user_id(update: Update, context: CallbackContext):
     if len(context.args) != 1:
-        update.message.reply_text("Usage: /id <username>")
+        update.message.reply_text("Usᴀɢᴇ: /id <ᴜsᴇʀɴᴀᴍᴇ>")
         return
 
     username = context.args[0]
@@ -145,7 +145,7 @@ def get_user_id(update: Update, context: CallbackContext):
     try:
         user = context.bot.get_chat(username)
         user_id = user.id
-        update.message.reply_text(f"Usᴇʀ Iᴅ ᴏғ {username} is {user_id}.")
+        update.message.reply_text(f"Usᴇʀ Iᴅ ᴏғ {username} ɪs {user_id}.")
     except Exception as e:
         update.message.reply_text(f"ғᴀɪʟᴅᴇ ᴛᴏ ɢᴇᴛ ᴜsᴇʀ Iᴅ: {e}")
         logger.error(f"get_user_id error: {e}")
@@ -203,12 +203,12 @@ def add_sudo(update: Update, context: CallbackContext):
     
     # Check if the user is the owner
     if user.id != OWNER_ID:
-        update.message.reply_text("You don't have permission to use this command.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
     
     # Check if a username or user ID is provided
     if len(context.args) != 1:
-        update.message.reply_text("Usage: /addsudo <username or user ID>")
+        update.message.reply_text("Usᴀɢᴇ: /addsudo <ᴜsᴇʀɴᴀᴍᴇ ᴏʀ ᴜsᴇʀ Iᴅ>")
         return
     
     sudo_user = context.args[0]
@@ -244,12 +244,12 @@ def rmsudo(update: Update, context: CallbackContext):
     
     # Check if the user is the owner
     if user.id != OWNER_ID:
-        update.message.reply_text("You don't have permission to use this command.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
     
     # Check if a username or user ID is provided
     if len(context.args) != 1:
-        update.message.reply_text("Usage: /rmsudo <username or user ID>")
+        update.message.reply_text("Usᴀɢᴇ: /rmsudo <ᴜsᴇʀɴᴀᴍᴇ ᴏʀ ᴜsᴇʀ ɪᴅ>")
         return
     
     sudo_user = context.args[0]
@@ -269,7 +269,7 @@ def rmsudo(update: Update, context: CallbackContext):
         sudo_user_obj = context.bot.get_chat_member(chat_id, sudo_user_id)
         
     except Exception as e:
-        update.message.reply_text(f"Failed to resolve user: {e}")
+        update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ʀᴇsᴏʟʙᴇ ᴜsᴇʀ: {e}")
         return
     
     # Now let's handle the removal of the sudo user from both the list and MongoDB
@@ -283,29 +283,29 @@ def rmsudo(update: Update, context: CallbackContext):
             if result.deleted_count > 0:
                 # Success: send confirmation with username (if exists) or ID
                 if sudo_user_obj.user.username:
-                    update.message.reply_text(f"Removed @{sudo_user_obj.user.username} as a sudo user.")
+                    update.message.reply_text(f"Rᴇᴍᴘᴠᴇᴅ @{sudo_user_obj.user.username} ᴀs ᴀ sᴜᴘᴇʀ ᴜsᴇʀ.")
                 else:
-                    update.message.reply_text(f"Removed user with ID {sudo_user_id} as a sudo user.")
+                    update.message.reply_text(f"Rᴇᴍᴏᴠᴇᴅ ᴜsᴇʀ ᴡɪᴛʜ Iᴅ {sudo_user_id} ᴀs ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
             else:
-                update.message.reply_text(f"Failed to find user with ID {sudo_user_id} in the database.")
+                update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ғɪɴᴅ ᴜsᴇʀ ᴡɪᴛʜ Iᴅ {sudo_user_id} ɪɴ ᴛʜᴇ Dʙ.")
                 
         except Exception as e:
-            update.message.reply_text(f"Failed to remove from MongoDB: {e}")
+            update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ʀᴇᴍᴏᴠᴇ ғʀᴏᴍ Mᴏɴɢᴏᴅʙ: {e}")
     else:
         if sudo_user_obj.user.username:
-            update.message.reply_text(f"@{sudo_user_obj.user.username} is not a sudo user.")
+            update.message.reply_text(f"@{sudo_user_obj.user.username} ɪs ɴᴏᴛ ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
         else:
-            update.message.reply_text(f"User with ID {sudo_user_id} is not a sudo user.")
+            update.message.reply_text(f"User with ID {sudo_user_id} ɪs ɴᴏᴛ ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
 
 
 def sudo_list(update: Update, context: CallbackContext):
     # Check if the user is the owner
     if update.effective_user.id != OWNER_ID:
-        update.message.reply_text("You don't have permission to use this command.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏɴ'ᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
 
     # Prepare the response message with SUDO_ID users
-    text = "List of sudo users:\n"
+    text = "ʟɪsᴛ ᴏғ sᴜᴅᴏ ᴜsᴇʀs:\n"
     count = 1
 
     # Fetch sudo users from MongoDB
@@ -317,11 +317,11 @@ def sudo_list(update: Update, context: CallbackContext):
             text += f"{count}. {user_mention}\n"
             count += 1
         except Exception as e:
-            update.message.reply_text(f"Failed to fetch sudo user details: {e}")
+            update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ғᴇᴛᴄʜ sᴜᴘᴇʀ ᴜsᴇʀ ᴅᴇᴛᴀɪʟs: {e}")
             return
 
     if not text.strip():
-        update.message.reply_text("No sudo users found.")
+        update.message.reply_text("Nᴏ sᴜᴘᴇʀ ᴜsᴇʀs ғᴏᴜɴᴅ.")
     else:
         update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 # MongoDB collection for authorized users
