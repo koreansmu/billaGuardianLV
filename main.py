@@ -42,6 +42,7 @@ StartTime = time.time()
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 users_collection = db['users']
+active_groups_collection = db['active_groups']
 
 # Define a list to store sudo user IDs
 sudo_users = SUDO_ID.copy()  # Copy initial SUDO_ID list
