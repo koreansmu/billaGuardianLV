@@ -35,24 +35,25 @@ def broadcast_message(update: Update, message_content: str, send_to_users=True, 
     users = list(get_all_users()) if send_to_users else []
     groups = list(get_all_groups()) if send_to_groups else []
 
+    logger.info(f"Found {len(users)} users and {len(groups)} groups to broadcast.")
+
     users_sent, groups_sent = 0, 0
-    
-    logger.info(f"ɴᴏᴛɪғʏɪɴɢ ᴛᴏ {len(users)} ᴜsᴇʀs ᴀɴᴅ {len(groups)} ɢʀᴏᴜᴘs.")
 
     for user in users:
         try:
             update.message.bot.send_message(user["user_id"], message_content, parse_mode="Markdown")
             users_sent += 1
         except TelegramError as e:
-            logger.error(f"Fᴀɪʟᴇᴅ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇ ᴛᴏ ᴜsᴇʀ {user['user_id']}: {e}")
+            logger.error(f"Failed to send message to user {user['user_id']}: {e}")
 
     for group in groups:
         try:
             update.message.bot.send_message(group["group_id"], message_content, parse_mode="Markdown")
             groups_sent += 1
         except TelegramError as e:
-            logger.error(f"ғᴀɪʟᴇᴅ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇ ᴛᴏ ɢʀᴏᴜᴘ {group['group_id']}: {e}")
+            logger.error(f"Failed to send message to group {group['group_id']}: {e}")
 
+    logger.info(f"Broadcast completed: {users_sent} users, {groups_sent} groups.")
     return users_sent, groups_sent
 
 def broadcast_command(update: Update, context: CallbackContext):
