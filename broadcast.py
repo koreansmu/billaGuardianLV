@@ -61,29 +61,29 @@ def broadcast_command(update: Update, context: CallbackContext):
     sudo_users = get_sudo_users()
 
     if user.id != OWNER_ID and user.id not in sudo_users:
-        update.message.reply_text("Yᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏᴍ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ ʙɪᴛᴄʜ.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ ʙɪᴛᴄʜ.")
         return
 
-    send_to_users, send_to_groups = False, True
-    if len(context.args) > 0 and context.args[0] == "-user":
-        send_to_users = True
-        send_to_groups = False
+    send_to_users, send_to_groups = True, True  # ✅ Now sends to both users and groups by default
+    if len(context.args) > 0 and context.args[0] == "-group":
+        send_to_users = False
+        send_to_groups = True
         context.args = context.args[1:]
 
     if len(context.args) < 1:
-        update.message.reply_text("Usage: /broadcast [optional -user] <message_content>")
+        update.message.reply_text("Usage: /broadcast [optional -group] <message_content>")
         return
 
     message_content = " ".join(context.args)
     users_sent, groups_sent = broadcast_message(update, message_content, send_to_users, send_to_groups)
-    update.message.reply_text(f"ᴍᴇssᴀɢᴇ ɴᴏᴛɪғʏɪᴇᴅ ᴛᴏ {users_sent} ᴜsᴇʀs ᴀɴᴅ {groups_sent} ɢʀᴏᴜᴘs.")
+    update.message.reply_text(f"ᴍᴇssᴀɢᴇ ʙʀᴏᴀᴅᴄᴀsᴛᴇᴅ ᴛᴏ {users_sent} ᴜsᴇʀs ᴀɴᴅ {groups_sent} ɢʀᴏᴜᴘs.")
 
 def reply_broadcast_command(update: Update, context: CallbackContext):
     user = update.effective_user
     sudo_users = get_sudo_users()
 
     if user.id != OWNER_ID and user.id not in sudo_users:
-        update.message.reply_text("Yᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏᴍ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ ʙɪᴛᴄʜ.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ ʙɪᴛᴄʜ.")
         return
 
     reply = update.message.reply_to_message
@@ -96,10 +96,10 @@ def reply_broadcast_command(update: Update, context: CallbackContext):
         update.message.reply_text("ᴀʜʜ ᴋɪᴅᴅ ᴜɴsᴜᴘᴘᴏʀᴛᴇᴅ ᴍᴇssᴀɢᴇ ᴛʏᴘᴇ.")
         return
 
-    send_to_users, send_to_groups = False, True
-    if len(context.args) > 0 and context.args[0] == "-user":
-        send_to_users = True
-        send_to_groups = False
+    send_to_users, send_to_groups = True, True  # ✅ Now sends to both users and groups by default
+    if len(context.args) > 0 and context.args[0] == "-group":
+        send_to_users = False
+        send_to_groups = True
         context.args = context.args[1:]
 
     users_sent, groups_sent = broadcast_message(update, message_content, send_to_users, send_to_groups)
