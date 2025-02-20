@@ -614,13 +614,14 @@ def main():
             dispatcher.bot.send_photo(
                 chat_id=SUPPORT_ID,
                 photo=PM_START_IMG,
-                caption="ʜᴇʟʟᴏ ɪ ᴀᴍ sᴛᴀʀᴛᴇᴅ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ𝘀 ! ɪ'ᴍ ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ @ifeelraam",
+                caption="ʜᴇʟʟᴏ ɪ ᴀᴍ sᴛᴀʀᴛᴇᴅ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ𝘴 ! ɪ'ᴍ ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ @ifeelraam",
                 parse_mode=ParseMode.MARKDOWN,
             )
         except Unauthorized:
             LOGGER.warning(f"ʙɪʟʟᴀ ɪsɴ'ᴛ ᴀʙʟᴇ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {SUPPORT_ID}, ɢᴏ ᴀɴᴅ ᴄʜᴇᴄᴋ!")
         except BadRequest as e:
             LOGGER.warning(e.message)
+
 
     # Register handlers
 dispatcher.add_handler(CommandHandler("start", start))
@@ -645,6 +646,7 @@ dispatcher.add_handler(CommandHandler("help", help, filters=Filters.chat_type.gr
     updater.start_polling()
     updater.idle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
     # Start the bot
