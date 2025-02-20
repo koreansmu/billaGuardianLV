@@ -80,20 +80,20 @@ def help(update, context):
 # Track users when they start the bot
 def start(update: Update, context: CallbackContext):
     user = update.effective_user
+    chat = update.effective_chat
     user_data = {"user_id": user.id, "first_name": user.first_name}
 
     # Insert user into MongoDB if they are not already stored
     if not users_collection.find_one({"user_id": user.id}):
         users_collection.insert_one(user_data)
 
-    update.message.reply_text("ʜᴏʟᴀ ᴀᴍɪɢᴏ!ᴋᴀɪsᴇ ʜᴏ ᴛʜɪᴋ ʜᴏ?,ʙɪʟʟᴀ ɪs ᴀᴄᴛɪᴠᴇ.")
-
-    if update.effective_chat.type == "private":
-        if len(args) >= 1:
-            if args[0].lower() == "help":
+    # Private chat start message
+    if chat.type == "private":
+        if context.args and len(context.args) >= 1:
+            if context.args[0].lower() == "help":
                 send_help(update.effective_chat.id, HELP_STRINGS)
-            elif args[0].lower().startswith("ghelp_"):
-                mod = args[0].lower().split("_", 1)[1]
+            elif context.args[0].lower().startswith("ghelp_"):
+                mod = context.args[0].lower().split("_", 1)[1]
                 if not HELPABLE.get(mod, False):
                     return
                 send_help(
@@ -104,35 +104,39 @@ def start(update: Update, context: CallbackContext):
                     ),
                 )
 
-            elif args[0].lower().startswith("stngs_"):
-                match = re.match("stngs_(.*)", args[0].lower())
-                chat = dispatcher.bot.getChat(match.group(1))
+            elif context.args[0].lower().startswith("stngs_"):
+                match = re.match("stngs_(.*)", context.args[0].lower())
+                chat_info = dispatcher.bot.getChat(match.group(1))
 
-                if is_user_admin(chat, update.effective_user.id):
+                if is_user_admin(chat_info, update.effective_user.id):
                     send_settings(match.group(1), update.effective_user.id, False)
                 else:
                     send_settings(match.group(1), update.effective_user.id, True)
 
-            elif args[0][1:].isdigit() and "rules" in IMPORTED:
-                IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
+            elif context.args[0][1:].isdigit() and "rules" in IMPORTED:
+                IMPORTED["rules"].send_rules(update, context.args[0], from_pm=True)
 
         else:
-            first_name = update.effective_user.first_name
-            update.effective_message.reply_text(
-                PM_START_TEXT.format(escape_markdown(first_name), (PM_START_IMG), BOT_NAME),                              
+            first_name = user.first_name
+
+            update.message.reply_photo(
+                photo=PM_START_IMG,
+                caption=PM_START_TEXT.format(first_name, PM_START_IMG),
                 reply_markup=InlineKeyboardMarkup(buttons),
                 parse_mode=ParseMode.MARKDOWN,
-                timeout=60,
             )
+
+    # Group chat start message
     else:
         update.effective_message.reply_photo(
             PM_START_IMG,
             reply_markup=InlineKeyboardMarkup(buttons),
             caption="ʙɪʟʟᴀ ᴇᴅɪᴛ ɢᴜᴀʀᴅɪᴀɴ ɪs ᴀʟɪᴠᴇ ʙᴀʙʏ!\n<b>ᴜᴘᴛɪᴍᴇ :</b> <code>{}</code>".format(
-                uptime
+                get_readable_time(time.time() - StartTime)
             ),
             parse_mode=ParseMode.HTML,
         )
+
 
 def get_user_id(update: Update, context: CallbackContext):
     if len(context.args) != 1:
