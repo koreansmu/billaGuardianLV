@@ -600,8 +600,6 @@ async def userid(client, message):
             )
 
 # Function to send message to SUPPORT_ID group
-
-
 def main():
 
     if SUPPORT_ID is not None and isinstance(SUPPORT_ID, str):
