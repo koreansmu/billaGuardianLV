@@ -152,16 +152,16 @@ def get_user_id(update: Update, context: CallbackContext):
     if message.reply_to_message:
         user = message.reply_to_message.from_user
         first_name = escape_markdown(user.first_name)
-        username = f"@{user.username}" if user.username else "No username"
-        message.reply_text(f"👤 *{first_name}* → `{user.id}`\nUsername: {escape_markdown(username)}",
+        username = f"@{user.username}" if user.username else "Nᴏ ᴜsᴇʀɴᴀᴍᴇ"
+        message.reply_text(f"👤 *{first_name}* → `{user.id}`\nUsᴇʀɴᴀᴍᴇ: {escape_markdown(username)}",
                            parse_mode="MarkdownV2")
         return
 
     # If command is used without arguments
     if not context.args:
-        message.reply_text("Usage:\n"
-                           "📌 `/id @username` - Get ID of a tagged user.\n"
-                           "📌 Reply to a message with `/id` - Get ID of the replied user.",
+        message.reply_text("Usᴀɢᴇ:\n"
+                           "🍂 `/id @username` - Gᴇᴛ Iᴅ oғ ᴀ ᴛᴀɢɢᴇᴅ ᴜsᴇʀ.\n"
+                           "🍃 Rᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ ᴡɪᴛʜ `/id` - ɢᴇᴛ Iᴅ Oғ ᴛʜᴇ ʀᴇᴘʟɪᴇᴅ ᴜsᴇʀ.",
                            parse_mode="MarkdownV2")
         return
 
@@ -178,7 +178,7 @@ def get_user_id(update: Update, context: CallbackContext):
                 first_name = escape_markdown(user.first_name)
                 result_text += f"👤 *{first_name}* → `{user.id}`\n"
             except Exception as e:
-                result_text += f"❌ `{escape_markdown(arg)}` → User not found in this group.\n"
+                result_text += f"❌ `{escape_markdown(arg)}` → Usᴇʀ ɴᴏᴛ ғᴏᴜɴᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ.\n"
                 logger.error(f"get_user_id error: {e}")
 
         elif arg.isdigit():  # If it's a user ID
@@ -187,13 +187,13 @@ def get_user_id(update: Update, context: CallbackContext):
                 first_name = escape_markdown(user.first_name)
                 result_text += f"👤 *{first_name}* → `{user.id}`\n"
             except Exception as e:
-                result_text += f"❌ `{escape_markdown(arg)}` → Invalid user ID.\n"
+                result_text += f"❌ `{escape_markdown(arg)}` → Iɴᴠᴀʟɪᴅ usᴇʀ Iᴅ.\n"
                 logger.error(f"get_user_id error: {e}")
 
     if result_text:
         message.reply_text(result_text, parse_mode="MarkdownV2")
     else:
-        message.reply_text("⚠️ No valid usernames or user IDs provided.", parse_mode="MarkdownV2")
+        message.reply_text("⚠️ Nᴏ vᴀʟɪᴅ ᴜsᴇʀɴᴀᴍᴇs ᴏʀ ᴜsᴇʀ Iᴅs ᴘʀᴏᴠɪᴅeᴅ.", parse_mode="MarkdownV2")
         
 
 # Track groups where the bot is active
@@ -238,7 +238,7 @@ def check_edit(update, context):
                 bot.delete_message(chat_id=chat_id, message_id=message_id)
                 
                 # Send a message notifying about the deletion
-                bot.send_message(chat_id=chat_id, text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ᴛʜᴇʀɪ ᴇᴅɪᴛɪᴇᴅ ᴍᴇssᴀɢᴇ.", parse_mode='HTML')
+                bot.send_message(chat_id=chat_id, text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ᴛʜᴇɪʀ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ.", parse_mode='HTML')
 
 # MongoDB collection for sudo users
 sudo_users_collection = db['sudo_users']
@@ -281,7 +281,7 @@ def add_sudo(update: Update, context: CallbackContext):
         })
         update.message.reply_text(f"ᴀᴅᴅᴇᴅ {sudo_user_obj.user.username} ᴀs ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
     except Exception as e:
-        update.message.reply_text(f"Fᴀɪʟᴇᴅ ʏᴏ ᴀᴅᴅ sᴜᴘᴇʀ ᴜsᴇʀ: {e}")
+        update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ᴀᴅᴅ sᴜᴘᴇʀ ᴜsᴇʀ: {e}")
 
 # Add the /rmsudo command to remove a sudo user
 def rmsudo(update: Update, context: CallbackContext):
@@ -315,7 +315,7 @@ def rmsudo(update: Update, context: CallbackContext):
         sudo_user_obj = context.bot.get_chat_member(chat_id, sudo_user_id)
         
     except Exception as e:
-        update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ʀᴇsᴏʟʙᴇ ᴜsᴇʀ: {e}")
+        update.message.reply_text(f"Fᴀɪʟᴇᴅ ᴛᴏ ʀᴇsᴏʟᴠᴇ ᴜsᴇʀ: {e}")
         return
     
     # Now let's handle the removal of the sudo user from both the list and MongoDB
@@ -329,7 +329,7 @@ def rmsudo(update: Update, context: CallbackContext):
             if result.deleted_count > 0:
                 # Success: send confirmation with username (if exists) or ID
                 if sudo_user_obj.user.username:
-                    update.message.reply_text(f"Rᴇᴍᴘᴠᴇᴅ @{sudo_user_obj.user.username} ᴀs ᴀ sᴜᴘᴇʀ ᴜsᴇʀ.")
+                    update.message.reply_text(f"Rᴇᴠᴀᴍᴘᴇᴅ @{sudo_user_obj.user.username} ᴀs ᴀ sᴜᴘᴇʀ ᴜsᴇʀ.")
                 else:
                     update.message.reply_text(f"Rᴇᴍᴏᴠᴇᴅ ᴜsᴇʀ ᴡɪᴛʜ Iᴅ {sudo_user_id} ᴀs ᴀ sᴜᴅᴏ ᴜsᴇʀ.")
             else:
