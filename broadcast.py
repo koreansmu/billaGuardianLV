@@ -116,7 +116,7 @@ def broadcast_command(update: Update, context: CallbackContext):
         context.args = context.args[1:]
 
     if len(context.args) < 1:
-        update.message.reply_text(ǫ"Usᴀɢᴇ: /broadcast [ᴏᴘᴛɪᴏɴᴀʟ -group] <ᴍᴇssᴀɢᴇ_ᴄᴏɴᴛᴇɴᴛ>")
+        update.message.reply_text("Usᴀɢᴇ: /broadcast [ᴏᴘᴛɪᴏɴᴀʟ -group] <ᴍᴇssᴀɢᴇ_ᴄᴏɴᴛᴇɴᴛ>")
         return
 
     message_content = " ".join(context.args)
