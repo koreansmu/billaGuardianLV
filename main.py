@@ -473,7 +473,7 @@ def fetch_active_groups_from_db():
 # Handler for /activegroups command
 def list_active_groups(update: Update, context: CallbackContext):
     if update.message.from_user.id != OWNER_ID:
-        update.message.reply_text("You don't have permission to use this command.")
+        update.message.reply_text("Yᴏᴜ ᴅᴏɴ'ʏ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
         return
 
     active_groups_from_db = fetch_active_groups_from_db()
@@ -482,7 +482,7 @@ def list_active_groups(update: Update, context: CallbackContext):
         update.message.reply_text("Tʜᴇ ʙɪʟʟᴀ ᴇɢ ɪs ɴᴏᴛ ᴀᴄᴛɪᴠᴇ ɪɴ ᴀɴʏ ɢʀᴏᴜᴘs ᴏʀ ғᴀɪʟᴇᴅ ᴛᴏ ᴄᴏᴍɴᴇᴄᴛ ᴛᴏ MᴏɴɢᴏDB.")
         return
 
-    group_list_msg = "Aᴄᴛɪᴠᴇ ɢʀᴏᴜᴘ ᴡʜᴇʀᴇ ᴛʜᴇ ʙɪʟʟᴀ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴀᴄᴛɪᴠᴇ:\n"
+    group_list_msg = "Aᴄᴛɪᴠᴇ ɢʀᴏᴜᴘs ᴡʜᴇʀᴇ ᴛʜᴇ ʙɪʟʟᴀ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴀᴄᴛɪᴠᴇ:\n"
     for group in active_groups_from_db:
         group_name = group.get("group_name", "Unknown Group")
         invite_link = group.get("invite_link", "Nᴏ ɪɴᴠɪᴛᴀᴛɪᴏɴ ᴀᴠᴀɪʟᴀʙʟᴅ")
@@ -687,7 +687,7 @@ def main():
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
     dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
 
-    print("Bot is running!")  # Debug log
+    print("Bɪʟʟᴀ ɪs ɴᴏᴡ ʀᴜɴɴɪɴɢ!")  # Debug log
     updater.start_polling()
     updater.idle()
 
