@@ -689,24 +689,26 @@ def main():
 
     # Register command handlers (works in both groups & private chats)
     dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help))
-    dispatcher.add_handler(CommandHandler("id", get_user_id, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("getid", get_id, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("addsudo", add_sudo, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("rmsudo", rmsudo, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("sudolist", sudo_list, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("activegroups", list_active_groups, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("clone", clone, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("auth", auth, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("unauth", unauth, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("stats", send_stats, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("broadcast", broadcast_command, filters=Filters.chat_type.groups))
-    dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("help", help))
+dispatcher.add_handler(CommandHandler("id", get_user_id, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("getid", get_id, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("addsudo", add_sudo, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("rmsudo", rmsudo, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("sudolist", sudo_list, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("activegroups", list_active_groups, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("clone", clone, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("auth", auth, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("unauth", unauth, filters=Filters.chat_type.groups))
+dispatcher.add_handler(CommandHandler("stats", send_stats, filters=Filters.chat_type.groups))
 
-    # Register message handlers
-    dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
-    dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
+# NEW broadcast commands (supporting PM & Groups)
+dispatcher.add_handler(CommandHandler("broadcast", broadcast_text, filters=Filters.chat_type.groups | Filters.chat_type.private))
+dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command, filters=Filters.chat_type.groups | Filters.chat_type.private))
+
+# Message handlers
+dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
+dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
 
     print("Bɪʟʟᴀ ɪs ɴᴏᴡ ʀᴜɴɴɪɴɢ!")  # Debug log
     updater.start_polling()
