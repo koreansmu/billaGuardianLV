@@ -189,3 +189,6 @@ async def broadcast_text(update: Update, context: CallbackContext):
     await status_message.edit_text(
         f"✅ Text Broadcast completed!\n\n👤 Users sent: {users_sent}\n👥 Groups sent: {groups_sent}\n❌ Failed: {failed}"
     )
+
+broadcast_command = broadcast_message
+reply_broadcast_command = broadcast_text
