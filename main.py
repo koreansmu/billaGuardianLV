@@ -15,7 +15,7 @@ from telegram.utils.helpers import mention_markdown
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from pymongo import MongoClient
-from broadcast import broadcast_text, reply_broadcast_command
+from broadcast import broadcast_text_handler, broadcast_reply_handler
 from pymongo.errors import DuplicateKeyError
 from config import LOGGER, MONGO_URI, DB_NAME, TELEGRAM_TOKEN, OWNER_ID, SUDO_ID, BOT_NAME, SUPPORT_ID, API_ID, API_HASH
 
@@ -681,13 +681,13 @@ async def userid(client, message):
 
 # Function to send message to SUPPORT_ID group
 def main():
-    print("Starting bot...")  # Debug log
+    print("Starting Billa bot...")  # Debug log
 
-    # Initialize Updater and Dispatcher FIRST
+    # Initialize Updater and Dispatcher
     updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
 
-    # Notify support group/channel if SUPPORT_ID is defined
+    # Notify SUPPORT_ID group/channel on startup
     if SUPPORT_ID is not None and isinstance(SUPPORT_ID, str):
         try:
             dispatcher.bot.send_photo(
@@ -701,32 +701,48 @@ def main():
         except BadRequest as e:
             LOGGER.warning(e.message)
 
-    # Register command handlers
+    # ========================
+    # Command Handlers
+    # ========================
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help))
+
+    # User ID commands
     dispatcher.add_handler(CommandHandler("id", get_user_id, filters=Filters.chat_type.groups))
     dispatcher.add_handler(CommandHandler("getid", get_id, filters=Filters.chat_type.groups))
+
+    # Sudo management
     dispatcher.add_handler(CommandHandler("addsudo", add_sudo, filters=Filters.chat_type.groups))
     dispatcher.add_handler(CommandHandler("rmsudo", rmsudo, filters=Filters.chat_type.groups))
     dispatcher.add_handler(CommandHandler("sudolist", sudo_list, filters=Filters.chat_type.groups))
+
+    # Group and clone management
     dispatcher.add_handler(CommandHandler("activegroups", list_active_groups, filters=Filters.chat_type.groups))
     dispatcher.add_handler(CommandHandler("clone", clone, filters=Filters.chat_type.groups))
     dispatcher.add_handler(CommandHandler("listactiveclones", list_active_cloned_bots, filters=Filters.chat_type.groups))
+
+    # Authorization
     dispatcher.add_handler(CommandHandler("auth", auth, filters=Filters.chat_type.groups))
     dispatcher.add_handler(CommandHandler("unauth", unauth, filters=Filters.chat_type.groups))
+
+    # Bot statistics
     dispatcher.add_handler(CommandHandler("stats", send_stats, filters=Filters.chat_type.groups))
 
-    # NEW broadcast commands (supporting both PM & Groups)
-    dispatcher.add_handler(CommandHandler("broadcast", broadcast_text, filters=Filters.chat_type.groups | Filters.chat_type.private))
-    dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command, filters=Filters.chat_type.groups | Filters.chat_type.private))
+    # ========================
+    # Broadcast Handlers (NEW)
+    # ========================
+    dispatcher.add_handler(broadcast_text_handler)       # /broadcast <text>
+    dispatcher.add_handler(broadcast_reply_handler)      # /replybroadcast (reply to message)
 
-    # Message handlers
+    # ========================
+    # Message Handlers
+    # ========================
     dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
     dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
 
     print("Bɪʟʟᴀ ɪs ɴᴏᴡ ʀᴜɴɴɪɴɢ!")  # Debug log
 
-    # Start the bot
+    # Start polling
     updater.start_polling()
     updater.idle()
 
