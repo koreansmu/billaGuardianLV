@@ -252,14 +252,27 @@ def check_edit(update, context):
         
         # Check if the user is authorized or admin (check against sudo users and MongoDB authorized users)
         if user_id not in sudo_users and authorized_users_collection.find_one({"user_id": user_id}) is None:
-            # Ensure user is not an admin
-            chat_member = bot.get_chat_member(chat_id, user_id)
+            try:
+                # Ensure user is not an admin
+                chat_member = bot.get_chat_member(chat_id, user_id)
+            except BadRequest as e:
+                if "Chat_admin_required" in str(e):
+                    LOGGER.warning(f"Bᴏᴛ ɪs ᴍɪssɪɴɢ ᴀᴅᴍɪɴ ʀɪɢʜᴛs ɪɴ ᴄʜᴀᴛ {chat_id}. Cᴀɴ"ᴛ ᴄʜᴇᴄᴋ ᴜsᴇʀ ᴇᴅɪᴛs {user_id}.")
+                    return
+                else:
+                    LOGGER.error(f"Unexpected error while checking chat member in chat {chat_id}: {e}")
+                    return
+
             if chat_member.status not in ['administrator', 'creator']:  # Only delete if the user is not an admin
                 # Delete the message if the user is neither authorized nor an admin
                 bot.delete_message(chat_id=chat_id, message_id=message_id)
                 
                 # Send a message notifying about the deletion
-                bot.send_message(chat_id=chat_id, text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ᴛʜᴇɪʀ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ.", parse_mode='HTML')
+                bot.send_message(
+                    chat_id=chat_id,
+                    text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ᴛʜᴇɪʀ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ.",
+                    parse_mode='HTML'
+                )
 
 # MongoDB collection for sudo users
 sudo_users_collection = db['sudo_users']
