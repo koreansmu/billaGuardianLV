@@ -189,13 +189,3 @@ async def broadcast_text(update: Update, context: CallbackContext):
     await status_message.edit_text(
         f"✅ Text Broadcast completed!\n\n👤 Users sent: {users_sent}\n👥 Groups sent: {groups_sent}\n❌ Failed: {failed}"
     )
-
-# ============================
-# Handler Setup Function
-# ============================
-def setup_broadcast_handlers(application):
-    # Broadcast text: /broadcast message
-    application.add_handler(CommandHandler("broadcast", broadcast_text))
-
-    # Reply + broadcast media/message: /replybroadcast
-    application.add_handler(CommandHandler("replybroadcast", broadcast_message, block=False))
