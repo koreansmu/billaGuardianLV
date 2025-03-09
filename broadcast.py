@@ -1,152 +1,201 @@
 import logging
-from telegram import Update, InputMediaPhoto, InputMediaVideo, InputMediaAnimation, InputMediaDocument
-from telegram.ext import CallbackContext
-from telegram.error import TelegramError
+import asyncio
+from telegram import Update
+from telegram.ext import CallbackContext, CommandHandler
+from telegram.error import TelegramError, RetryAfter
 from pymongo import MongoClient
 import config
-# Set up logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+
+# Logging setup
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 logger = logging.getLogger(__name__)
 
 # MongoDB Connection
 client = MongoClient(config.MONGO_URI)
 db = client[config.DB_NAME]
-users_collection = db["users"]  # Collection for users who started the bot
-active_groups_collection = db["active_groups"]  # Collection for active groups
+users_collection = db["users"]
+groups_collection = db["active_groups"]
 
-# Fetch OWNER_ID and SUDO_ID from config.py
+# Owner and Sudo Users
 OWNER_ID = config.OWNER_ID
-SUDO_USERS = config.SUDO_ID  # List of sudo users
+SUDO_USERS = config.SUDO_ID if isinstance(config.SUDO_ID, list) else [config.SUDO_ID]
 
+# Functions to fetch users and groups
 def get_all_users():
-    return users_collection.find({}, {"user_id": 1, "_id": 0})  # Fetch only user_id
+    return users_collection.find({}, {"user_id": 1, "_id": 0})
 
 def get_all_groups():
-    return active_groups_collection.find({}, {"group_id": 1, "_id": 0})  # Fetch only group_id
+    return groups_collection.find({}, {"group_id": 1, "_id": 0})
 
 def get_sudo_users():
     sudo_users_from_db = [user["user_id"] for user in users_collection.find()]
-    sudo_users = set(sudo_users_from_db + SUDO_USERS)
-    return sudo_users
+    return list(set(sudo_users_from_db + SUDO_USERS))
 
-def broadcast_message(update: Update, message_content: str, send_to_users=True, send_to_groups=True, reply=None):
+# ============================
+# Broadcast Function (FORWARDED / COPIED)
+# ============================
+async def broadcast_message(update: Update, context: CallbackContext, copy=True):
+    user = update.effective_user
+    sudo_users = get_sudo_users()
+
+    if user.id != OWNER_ID and user.id not in sudo_users:
+        return await update.message.reply_text("🚫 You do not have permission to broadcast.")
+
+    reply = update.message.reply_to_message
+    if not reply:
+        return await update.message.reply_text("❗ Please reply to a message you want to broadcast.")
+
+    send_to_users = send_to_groups = True
+
+    # Optional args (like -group)
+    args = context.args
+    if args and args[0] == "-group":
+        send_to_users = False
+        send_to_groups = True
+        args.pop(0)
+
+    # Fetch lists
     users = list(get_all_users()) if send_to_users else []
     groups = list(get_all_groups()) if send_to_groups else []
 
-    logger.info(f"Found {len(users)} users and {len(groups)} groups to broadcast.")
+    recipients = users + groups
+    total_recipients = len(recipients)
+    if total_recipients == 0:
+        return await update.message.reply_text("❗ No users or groups found to broadcast.")
 
-    users_sent, groups_sent = 0, 0
+    users_sent = groups_sent = 0
+    failed = 0
 
-    for recipient in users + groups:
+    status_message = await update.message.reply_text(f"🔄 Starting broadcast to {total_recipients} recipients...")
+
+    # Loop through recipients
+    for idx, recipient in enumerate(recipients, 1):
         chat_id = recipient.get("user_id") or recipient.get("group_id")
+
         try:
-            # If the message is a reply (i.e., contains media)
-            if reply:
-                if reply.photo:
-                    update.message.bot.send_photo(
-                        chat_id, 
-                        reply.photo[-1].file_id, 
-                        caption=message_content, 
-                        parse_mode="Markdown", 
-                        disable_web_page_preview=False
-                    )
-                elif reply.video:
-                    update.message.bot.send_video(
-                        chat_id, 
-                        reply.video.file_id, 
-                        caption=message_content, 
-                        parse_mode="Markdown", 
-                        disable_web_page_preview=False
-                    )
-                elif reply.animation:  # GIF or Animated Emojis
-                    update.message.bot.send_animation(
-                        chat_id, 
-                        reply.animation.file_id, 
-                        caption=message_content, 
-                        parse_mode="Markdown", 
-                        disable_web_page_preview=False
-                    )
-                elif reply.document:
-                    update.message.bot.send_document(
-                        chat_id, 
-                        reply.document.file_id, 
-                        caption=message_content, 
-                        parse_mode="Markdown", 
-                        disable_web_page_preview=False
-                    )
-                else:
-                    update.message.bot.send_message(
-                        chat_id, 
-                        message_content, 
-                        parse_mode="Markdown", 
-                        disable_web_page_preview=False
-                    )
-            else:
-                update.message.bot.send_message(
-                    chat_id, 
-                    message_content, 
-                    parse_mode="Markdown", 
-                    disable_web_page_preview=False
+            # Copy message (clean) or forward (with sender info)
+            if copy:
+                await context.bot.copy_message(
+                    chat_id=chat_id,
+                    from_chat_id=reply.chat_id,
+                    message_id=reply.message_id
                 )
-            
-            if chat_id in [user["user_id"] for user in users]:
+            else:
+                await context.bot.forward_message(
+                    chat_id=chat_id,
+                    from_chat_id=reply.chat_id,
+                    message_id=reply.message_id
+                )
+
+            # Count where the message was sent
+            if "user_id" in recipient:
                 users_sent += 1
             else:
                 groups_sent += 1
 
+        except RetryAfter as e:
+            logger.warning(f"Flood wait for {e.retry_after} seconds on {chat_id}. Sleeping...")
+            await asyncio.sleep(e.retry_after)
+            continue
+
+        except TelegramError as e:
+            logger.error(f"Failed to send to {chat_id}: {e}")
+            failed += 1
+            continue
+
+        # Update status every 20 messages
+        if idx % 20 == 0:
+            await status_message.edit_text(
+                f"📤 Broadcasting...\n✅ Users: {users_sent}\n✅ Groups: {groups_sent}\n❌ Failed: {failed}\nProgress: {idx}/{total_recipients}"
+            )
+
+    # Final message
+    await status_message.edit_text(
+        f"✅ Broadcast completed!\n\n👤 Users sent: {users_sent}\n👥 Groups sent: {groups_sent}\n❌ Failed: {failed}"
+    )
+
+# ============================
+# Text Broadcast (non-reply)
+# ============================
+async def broadcast_text(update: Update, context: CallbackContext):
+    user = update.effective_user
+    sudo_users = get_sudo_users()
+
+    if user.id != OWNER_ID and user.id not in sudo_users:
+        return await update.message.reply_text("🚫 You do not have permission to broadcast.")
+
+    args = context.args
+    if not args:
+        return await update.message.reply_text("❗ Usage: `/broadcast [message]`\nOr reply to a message to broadcast.", parse_mode="Markdown")
+
+    send_to_users = send_to_groups = True
+    if args[0] == "-group":
+        send_to_users = False
+        send_to_groups = True
+        args.pop(0)
+
+    message_content = " ".join(args)
+
+    # Fetch lists
+    users = list(get_all_users()) if send_to_users else []
+    groups = list(get_all_groups()) if send_to_groups else []
+
+    recipients = users + groups
+    total_recipients = len(recipients)
+
+    if total_recipients == 0:
+        return await update.message.reply_text("❗ No users or groups found to broadcast.")
+
+    users_sent = groups_sent = 0
+    failed = 0
+
+    status_message = await update.message.reply_text(f"🔄 Starting text broadcast to {total_recipients} recipients...")
+
+    # Loop through recipients
+    for idx, recipient in enumerate(recipients, 1):
+        chat_id = recipient.get("user_id") or recipient.get("group_id")
+
+        try:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=message_content,
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
+
+            if "user_id" in recipient:
+                users_sent += 1
+            else:
+                groups_sent += 1
+
+        except RetryAfter as e:
+            logger.warning(f"Flood wait for {e.retry_after} seconds on {chat_id}. Sleeping...")
+            await asyncio.sleep(e.retry_after)
+            continue
+
         except TelegramError as e:
             logger.error(f"Failed to send message to {chat_id}: {e}")
+            failed += 1
+            continue
 
-    logger.info(f"Broadcast completed: {users_sent} users, {groups_sent} groups.")
-    return users_sent, groups_sent
-  
-def broadcast_command(update: Update, context: CallbackContext):
-    user = update.effective_user
-    sudo_users = get_sudo_users()
+        if idx % 20 == 0:
+            await status_message.edit_text(
+                f"📤 Broadcasting...\n✅ Users: {users_sent}\n✅ Groups: {groups_sent}\n❌ Failed: {failed}\nProgress: {idx}/{total_recipients}"
+            )
 
-    if user.id != OWNER_ID and user.id not in sudo_users:
-        update.message.reply_text("Yᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ.")
-        return
+    await status_message.edit_text(
+        f"✅ Text Broadcast completed!\n\n👤 Users sent: {users_sent}\n👥 Groups sent: {groups_sent}\n❌ Failed: {failed}"
+    )
 
-    send_to_users, send_to_groups = True, True
-    if len(context.args) > 0 and context.args[0] == "-group":
-        send_to_users = False
-        send_to_groups = True
-        context.args = context.args[1:]
+# ============================
+# Handler Setup Function
+# ============================
+def setup_broadcast_handlers(application):
+    # Broadcast text: /broadcast message
+    application.add_handler(CommandHandler("broadcast", broadcast_text))
 
-    if len(context.args) < 1:
-        update.message.reply_text("Usᴀɢᴇ: /broadcast [ᴏᴘᴛɪᴏɴᴀʟ -group] <ᴍᴇssᴀɢᴇ_ᴄᴏɴᴛᴇɴᴛ>")
-        return
-
-    message_content = " ".join(context.args)
-    users_sent, groups_sent = broadcast_message(update, message_content, send_to_users, send_to_groups)
-    update.message.reply_text(f"ᴍᴇssᴀɢᴇ ᴛʀᴜᴍᴘʜᴇᴅ ᴛᴏ {users_sent} Usᴇʀs ᴀɴᴅ {groups_sent} ɢʀᴏᴜᴘs.")
-
-
-def reply_broadcast_command(update: Update, context: CallbackContext):
-    user = update.effective_user
-    sudo_users = get_sudo_users()
-
-    if user.id != OWNER_ID and user.id not in sudo_users:
-        update.message.reply_text("Yᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ.")
-        return
-
-    reply = update.message.reply_to_message
-    if not reply:
-        update.message.reply_text("ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ ᴛᴏ ʙʀᴏᴀᴅᴄᴀsᴛ.")
-        return
-
-    message_content = reply.text or reply.caption
-    if not message_content:
-        update.message.reply_text("Uɴsᴜᴘᴘᴏʀᴛᴇᴅ ᴍᴇssᴀɢᴇ ᴛʏᴘᴇ.")
-        return
-
-    send_to_users, send_to_groups = True, True
-    if len(context.args) > 0 and context.args[0] == "-group":
-        send_to_users = False
-        send_to_groups = True
-        context.args = context.args[1:]
-
-    users_sent, groups_sent = broadcast_message(update, message_content, send_to_users, send_to_groups, reply)
-    update.message.reply_text(f"ᴍᴇssᴀɢᴇ ᴛʀᴜᴍᴘʜᴇᴅ ᴛᴏ  {users_sent} ᴜsᴇʀs ᴀɴᴅ {groups_sent} ɢʀᴏᴜᴘs.")
+    # Reply + broadcast media/message: /replybroadcast
+    application.add_handler(CommandHandler("replybroadcast", broadcast_message, block=False))
