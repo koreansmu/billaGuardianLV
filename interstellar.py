@@ -24,11 +24,11 @@ buttons = [
         ),
     ],
     [
-        InlineKeyboardButton(text="𝗦ᴜᴘᴘᴏʀᴛ", url=f"https://t.me/BillaCore"),
+        InlineKeyboardButton(text="𝗦ᴜᴘᴘᴏʀᴛ", url=f"https://t.me/BillaNothing"),
         InlineKeyboardButton(text="Sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ", url=f"https://t.me/BillaSpace"),
     ],    
     [
-        InlineKeyboardButton(text="𝗢ᴡɴᴇʀ", url=f"https://t.me/interstellarXd"),
+        InlineKeyboardButton(text="𝗢ᴡɴᴇʀ", url=f"https://t.me/x_ifeelram"),
     ],
     
 ]
@@ -45,4 +45,4 @@ IMG = [
 "https://telegra.ph/file/fbfa4262e467652e75d83.jpg",
 "https://telegra.ph/file/865ce3676d535ec83dce9.jpg",
 ]
-PM_START_IMG = "https://graph.org/file/4406f73158f063d9b4c8a-149f2c85562e350896.jpg"
+PM_START_IMG = "https://graph.org/file/2ec1070047bce6578fa26-32de46881e8c48d5bf.jpg"
