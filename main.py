@@ -74,8 +74,29 @@ def get_readable_time(seconds: int) -> str:
 
 def help(update, context):
     user = update.effective_user
-    mention = f"<a href='tg://user?id={user.id}'>{user.first_name}</a>"
-    update.message.reply_text(f"ʙᴜᴅᴅʏ, {mention}! ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋᴏᴜᴛ sᴜᴘᴘᴏʀᴛ ɢʀᴜᴘ ɴᴏᴡ", parse_mode='HTML')
+    chat = update.effective_chat
+
+    # Prepare the mention for both PM and groups
+    if chat.type == "private":
+        mention = f"<a href='tg://user?id={user.id}'>{user.first_name}</a>"
+    else:
+        # In groups, mention with markdown works better
+        mention = f"[{user.first_name}](tg://user?id={user.id})"
+
+    buttons = InlineKeyboardMarkup(
+        [[
+            InlineKeyboardButton("📜 Cᴏᴍᴍᴀɴᴅ Lɪsᴛ", url="https://t.me/BillaSpace/48512")
+        ]]
+    )
+
+    # Use HTML only in private chats, markdown in groups
+    parse_mode = "HTML" if chat.type == "private" else "Markdown"
+
+    update.message.reply_text(
+        f"ʙᴜᴅᴅʏ, {mention}! ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋᴏᴜᴛ sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ ɴᴏᴡ @BillaNothing ",
+        parse_mode=parse_mode,
+        reply_markup=buttons
+    )
 
 # Track users when they start the bot
 def start(update: Update, context: CallbackContext):
