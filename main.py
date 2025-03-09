@@ -15,7 +15,7 @@ from telegram.utils.helpers import mention_markdown
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from pymongo import MongoClient
-from broadcast import broadcast_command, reply_broadcast_command
+from broadcast import broadcast_text, reply_broadcast_command
 from pymongo.errors import DuplicateKeyError
 from config import LOGGER, MONGO_URI, DB_NAME, TELEGRAM_TOKEN, OWNER_ID, SUDO_ID, BOT_NAME, SUPPORT_ID, API_ID, API_HASH
 
