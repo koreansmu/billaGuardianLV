@@ -710,9 +710,12 @@ dispatcher.add_handler(CommandHandler("replybroadcast", reply_broadcast_command,
 dispatcher.add_handler(MessageHandler(Filters.update.edited_message, check_edit))
 dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, track_groups))
 
+
+def main():
     print("Bɪʟʟᴀ ɪs ɴᴏᴡ ʀᴜɴɴɪɴɢ!")  # Debug log
     updater.start_polling()
     updater.idle()
+
 
 if __name__ == '__main__':
     main()
