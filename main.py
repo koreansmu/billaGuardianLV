@@ -239,38 +239,47 @@ def check_edit(update, context):
     # Check if the update is an edited message
     if update.edited_message:
         edited_message = update.edited_message
-        
+
         # Get the chat ID and message ID
         chat_id = edited_message.chat_id
         message_id = edited_message.message_id
-        
+
         # Get the user who edited the message
         user_id = edited_message.from_user.id
-        
+
         # Create the mention for the user
         user_mention = f"<a href='tg://user?id={user_id}'>{html.escape(edited_message.from_user.first_name)}</a>"
-        
-        # Check if the user is authorized or admin (check against sudo users and MongoDB authorized users)
+
+        # Check if the user is authorized (sudo users or in MongoDB authorized users collection)
         if user_id not in sudo_users and authorized_users_collection.find_one({"user_id": user_id}) is None:
             try:
                 # Ensure user is not an admin
                 chat_member = bot.get_chat_member(chat_id, user_id)
+
             except BadRequest as e:
                 if "Chat_admin_required" in str(e):
-                    LOGGER.warning(f"Bᴏᴛ ɪs ᴍɪssɪɴɢ ᴀᴅᴍɪɴ ʀɪɢʜᴛs ɪɴ ᴄʜᴀᴛ {chat_id}. Cᴀɴ"ᴛ ᴄʜᴇᴄᴋ ᴜsᴇʀ ᴇᴅɪᴛs {user_id}.")
+                    LOGGER.warning(
+                        f"Bᴏᴛ ɪs ᴍɪssɪɴɢ ᴀᴅᴍɪɴ ʀɪɢʜᴛs ɪɴ ᴄʜᴀᴛ {chat_id}. Cᴀɴ't ᴄʜᴇᴄᴋ ᴜsᴇʀ ᴇᴅɪᴛs {user_id}."
+                    )
                     return
                 else:
-                    LOGGER.error(f"Unexpected error while checking chat member in chat {chat_id}: {e}")
+                    LOGGER.error(
+                        f"Unexpected error while checking chat member in chat {chat_id}: {e}"
+                    )
                     return
 
-            if chat_member.status not in ['administrator', 'creator']:  # Only delete if the user is not an admin
-                # Delete the message if the user is neither authorized nor an admin
+            # Only delete if the user is not an admin or creator
+            if chat_member.status not in ['administrator', 'creator']:
+                # Delete the edited message
                 bot.delete_message(chat_id=chat_id, message_id=message_id)
-                
-                # Send a message notifying about the deletion
+
+                # Notify about the deletion
                 bot.send_message(
                     chat_id=chat_id,
-                    text=f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ᴛʜᴇɪʀ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ.",
+                    text=(
+                        f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, "
+                        "ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ᴛʜᴇɪʀ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ."
+                    ),
                     parse_mode='HTML'
                 )
 
