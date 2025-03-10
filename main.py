@@ -748,20 +748,23 @@ def main():
     # Initialize Updater and Dispatcher
     updater = Updater(token=TELEGRAM_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
+    bot = dispatcher.bot
 
     # Notify SUPPORT_ID group/channel on startup
-    if SUPPORT_ID is not None and isinstance(SUPPORT_ID, str):
+    if SUPPORT_ID:
         try:
-            dispatcher.bot.send_photo(
+            bot.send_photo(
                 chat_id=SUPPORT_ID,
                 photo=PM_START_IMG,
                 caption="ʜᴇʟʟᴏ, ɪ'ᴍ ᴏɴʟɪɴᴇ ᴀɴᴅ ʀᴇᴀᴅʏ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴍᴇssᴀɢᴇs!",
-                parse_mode=ParseMode.MARKDOWN,
+                parse_mode=ParseMode.MARKDOWN
             )
+            print(f"Startup message sent to SUPPORT_ID: {SUPPORT_ID}")
+
         except Unauthorized:
-            LOGGER.warning(f"ʙɪʟʟᴀ ᴄᴀɴ'ᴛ sᴇɴᴅ ᴍᴇssᴀɢᴇs ᴛᴏ {SUPPORT_ID}, ᴘʟᴇᴀsᴇ ᴄʜᴇᴄᴋ!")
+            LOGGER.warning(f"❌ Bᴏᴛ ᴄᴀɴ'ᴛ sᴇɴᴅ ᴍᴇssᴀɢᴇs ᴛᴏ {SUPPORT_ID}. Cʜᴇᴄᴋ ᴘᴇʀᴍɪssɪᴏɴs!")
         except BadRequest as e:
-            LOGGER.warning(e.message)
+            LOGGER.warning(f"ʙᴀᴅ ʀᴇǫᴜᴇsᴛ ᴇʀʀᴏʀ ᴡʜɪʟᴇ sᴇɴᴅɪɴɢ ᴛᴏ {SUPPORT_ID}: {e.message}")
 
     # ========================
     # Command Handlers
@@ -791,7 +794,7 @@ def main():
     dispatcher.add_handler(CommandHandler("stats", send_stats, filters=Filters.chat_type.groups))
 
     # ========================
-    # Broadcast Handlers (NEW)
+    # Broadcast Handlers
     # ========================
     dispatcher.add_handler(broadcast_text_handler)       # /broadcast <text>
     dispatcher.add_handler(broadcast_reply_handler)      # /replybroadcast (reply to message)
