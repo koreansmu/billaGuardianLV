@@ -10,7 +10,7 @@ from interstellar import *
 from telegram import Update, Bot
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from telegram.utils.helpers import
+from telegram.utils.helpers import escape
 from telegram.error import BadRequest escape_markdown, mention_html
 from telegram.utils.helpers import mention_markdown
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
