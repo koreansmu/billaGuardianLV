@@ -10,7 +10,8 @@ from interstellar import *
 from telegram import Update, Bot
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from telegram.utils.helpers import escape_markdown, mention_html
+from telegram.utils.helpers import
+from telegram.error import BadRequest escape_markdown, mention_html
 from telegram.utils.helpers import mention_markdown
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
@@ -236,52 +237,104 @@ authorized_users_collection = mongo_client["your_database_name"]["authorized_use
 def check_edit(update, context):
     bot = context.bot
 
-    # Check if the update is an edited message
-    if update.edited_message:
-        edited_message = update.edited_message
+    # Exit if it's not an edited message
+    if not update.edited_message:
+        return
 
-        # Get the chat ID and message ID
-        chat_id = edited_message.chat_id
-        message_id = edited_message.message_id
+    edited_message = update.edited_message
+    chat_id = edited_message.chat_id
+    message_id = edited_message.message_id
+    user = edited_message.from_user
+    user_id = user.id
+    user_first_name = html.escape(user.first_name)
+    user_mention = f"<a href='tg://user?id={user_id}'>{user_first_name}</a>"
 
-        # Get the user who edited the message
-        user_id = edited_message.from_user.id
+    # Check if user is owner, sudo, or authorized
+    is_owner = user_id == OWNER_ID
+    is_sudo = user_id in sudo_users
+    is_authorized = authorized_users_collection.find_one({"user_id": user_id})
 
-        # Create the mention for the user
-        user_mention = f"<a href='tg://user?id={user_id}'>{html.escape(edited_message.from_user.first_name)}</a>"
+    if is_owner or is_sudo or is_authorized:
+        bot.send_message(
+            chat_id=SUPPORT_ID,
+            text=(
+                f"✅ Aᴜᴛʜᴏʀɪᴢᴇᴅ ᴜsᴇʀ {user_mention} (Owner/Sudo/Authorized) ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ ɪɴ ᴄʜᴀᴛ <code>{chat_id}</code>.\n"
+                "Nᴏ ᴀᴄᴛɪᴏɴ ᴡᴀs ᴛᴀᴋᴇɴ."
+            ),
+            parse_mode='HTML'
+        )
+        return
 
-        # Check if the user is authorized (sudo users or in MongoDB authorized users collection)
-        if user_id not in sudo_users and authorized_users_collection.find_one({"user_id": user_id}) is None:
-            try:
-                # Ensure user is not an admin
-                chat_member = bot.get_chat_member(chat_id, user_id)
+    # Try to check if the user is an admin
+    try:
+        chat_member = bot.get_chat_member(chat_id, user_id)
 
-            except BadRequest as e:
-                if "Chat_admin_required" in str(e):
-                    LOGGER.warning(
-                        f"Bᴏᴛ ɪs ᴍɪssɪɴɢ ᴀᴅᴍɪɴ ʀɪɢʜᴛs ɪɴ ᴄʜᴀᴛ {chat_id}. Cᴀɴ't ᴄʜᴇᴄᴋ ᴜsᴇʀ ᴇᴅɪᴛs {user_id}."
-                    )
-                    return
-                else:
-                    LOGGER.error(
-                        f"Unexpected error while checking chat member in chat {chat_id}: {e}"
-                    )
-                    return
+        if chat_member.status in ['administrator', 'creator']:
+            bot.send_message(
+                chat_id=SUPPORT_ID,
+                text=(
+                    f"👨‍🚀 Usᴇʀ {user_mention} is an <b>{chat_member.status}</b> ɪɴ ᴄʜᴀᴛ <code>{chat_id}</code>.\n"
+                    "Nᴏ ᴅᴇʟᴇᴛɪᴏɴ ᴡᴀs ᴘᴇʀғᴏʀᴍᴇᴅ."
+                ),
+                parse_mode='HTML'
+            )
+            return
 
-            # Only delete if the user is not an admin or creator
-            if chat_member.status not in ['administrator', 'creator']:
-                # Delete the edited message
-                bot.delete_message(chat_id=chat_id, message_id=message_id)
+    except BadRequest as e:
+        error_text = str(e)
 
-                # Notify about the deletion
-                bot.send_message(
-                    chat_id=chat_id,
-                    text=(
-                        f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ, "
-                        "ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ᴛʜᴇɪʀ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ."
-                    ),
-                    parse_mode='HTML'
-                )
+        if "Chat_admin_required" in error_text:
+            bot.send_message(
+                chat_id=SUPPORT_ID,
+                text=(
+                    f"🚫 Bᴏᴛ ɴᴇᴇᴅs ᴀᴅᴍɪɴ ʀɪɢʜᴛs ɪɴ ᴄʜᴀᴛ <code>{chat_id}</code>.\n"
+                    f"Cᴀɴɴᴏᴛ ᴄʜᴇᴄᴋ/ᴅᴇʟ ᴇᴅɪᴛs ғʀᴏᴍ {user_mention}."
+                ),
+                parse_mode='HTML'
+            )
+        else:
+            bot.send_message(
+                chat_id=SUPPORT_ID,
+                text=(
+                    f"❗ Uɴᴇxᴘᴇᴄᴛᴇᴅ ᴇʀʀᴏʀ ᴄʜᴇᴄᴋɪɴɢ ᴄʜᴀᴛ ᴍᴇᴍʙᴇʀ ɪɴ ᴄʜᴀᴛ <code>{chat_id}</code>:\n"
+                    f"<code>{error_text}</code>"
+                ),
+                parse_mode='HTML'
+            )
+        return
+
+    # Delete the unauthorized user's edited message
+    try:
+        bot.delete_message(chat_id=chat_id, message_id=message_id)
+
+        bot.send_message(
+            chat_id=chat_id,
+            text=(
+                f"{user_mention} Jᴜsᴛ ᴇᴅɪᴛᴇᴅ ᴀ ᴍᴇssᴀɢᴇ. "
+                "ɪ ʜᴀᴠᴇ ᴅᴇʟᴇᴛᴇᴅ ɪᴛ."
+            ),
+            parse_mode='HTML'
+        )
+
+        bot.send_message(
+            chat_id=SUPPORT_ID,
+            text=(
+                f"🗑️ Dᴇʟᴇᴛᴇᴅ ᴇᴅɪᴛᴇᴅ ᴍᴇssᴀɢᴇ ғʀᴏᴍ ᴜɴᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴜsᴇʀ {user_mention} "
+                f"ɪɴ ᴄʜᴀᴛ <code>{chat_id}</code>."
+            ),
+            parse_mode='HTML'
+        )
+
+    except BadRequest as e:
+        bot.send_message(
+            chat_id=SUPPORT_ID,
+            text=(
+                f"❌ Fᴀɪʟᴇᴅ ᴛᴏ ᴅᴇʟᴇᴛᴇ ᴍᴇssᴀɢᴇ! Mᴀᴋᴇ sᴜʀᴇ ʙᴏᴛ ʜᴀs ᴅᴇʟᴇᴛᴇ ᴍᴇssᴀɢᴇ ᴀɴᴅ ɪɴᴠɪᴛᴇ ᴜsᴇʀs ʀɪɢʜᴛs.\n"
+                f"Message ID: <code>{message_id}</code> ɪɴ ᴄʜᴀᴛ <code>{chat_id}</code>.\n"
+                f"<code>{e}</code>"
+            ),
+            parse_mode='HTML'
+        )
 
 # MongoDB collection for sudo users
 sudo_users_collection = db['sudo_users']
